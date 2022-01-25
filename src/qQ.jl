@@ -31,11 +31,10 @@ function estimate_qQ(u::AbstractVector, v::AbstractMatrix)
     return (q = q, Q = Q)
 end
 
-function estimate_qQ(u::AbstractVector, v::AbstractMatrix)
-    @assert length(u) == size(v, 2)
-    u_ = u .- mean(u)
-    v_ = v .- mean(v; dims=2)
-    q = v_ * u_ / length(u)
-    Q = v * (u_ .* v') / length(u)
+function estimate_qQ(u::AbstractVector, v::AbstractArray)
+    @assert length(u) == size(v)[end]
+    q_, Q_ = estimate_qQ(u, reshape(v, :, size(v)[end]))
+    q = reshape(q_, Base.front(size(v)))
+    Q = reshape(Q_, Base.front(size(v))..., Base.front(size(v))...)
     return (q = q, Q = Q)
 end
