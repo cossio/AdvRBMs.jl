@@ -1,15 +1,15 @@
 """
     project_plane(w, q)
 
-Projects `w` to the plane orthogonal to `q`.
+Projects `w` to the (hyper-)plane orthogonal to `q`.
 """
 function project_plane(w::AbstractArray, q::AbstractArray)
     @assert size(w)[1:ndims(q)] == size(q)
-    proj = project_plane(reshape(w, length(q), :), vec(q))
-    return reshape(proj, size(w))
+    wp = project_plane(reshape(w, length(q), :), vec(q))
+    return reshape(wp, size(w))
 end
-
 project_plane(w::AbstractVecOrMat, q::AbstractVector) = w - q * (q' * w) / (q' * q)
+project_plane!(w::AbstractArray, q::AbstractArray) = w .= project_plane(w, q)
 
 """
     ∂wQw(w, Q)
@@ -21,9 +21,7 @@ function ∂wQw(w::AbstractArray, Q::AbstractArray)
     Dv = ndims(Q) ÷ 2
     @assert size(w)[1:Dv] == size(Q)[1:Dv] == size(Q)[(Dv + 1):end]
     N = prod(size(Q)[1:Dv])
-    Qmat = reshape(Q, N, N)
-    wmat = reshape(w, N, :)
-    return ∂wQw(wmat, Qmat)
+    return ∂wQw(reshape(w, N, :), reshape(Q, N, N))
 end
 
 function ∂wQw(w::AbstractMatrix, Q::AbstractMatrix)
@@ -36,7 +34,7 @@ end
 """
     sylvester_projection(A, X)
 
-Projects `X` onto the solution space of `A'X + X'A = 0`.
+Returns the projection of `X` onto the solution space of `A'X + X'A = 0`.
 """
 function sylvester_projection(A::AbstractMatrix, X::AbstractMatrix)
     @assert size(A) == size(X)
