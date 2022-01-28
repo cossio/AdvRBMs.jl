@@ -1,7 +1,7 @@
 function estimate_q(u::AbstractVector, v::AbstractMatrix)
     @assert length(u) == size(v, 2)
-    u_ = u .- mean(u)
-    v_ = v .- mean(v; dims=2)
+    u_ = u .- Statistics.mean(u)
+    v_ = v .- Statistics.mean(v; dims=2)
     return v_ * u_ / length(u)
 end
 
@@ -12,7 +12,7 @@ end
 
 function estimate_Q(u::AbstractVector, v::AbstractMatrix)
     @assert length(u) == size(v, 2)
-    u_ = u .- mean(u)
+    u_ = u .- Statistics.mean(u)
     return v * (u_ .* v') / length(u)
 end
 
@@ -24,8 +24,8 @@ end
 
 function estimate_qQ(u::AbstractVector, v::AbstractMatrix)
     @assert length(u) == size(v, 2)
-    u_ = u .- mean(u)
-    v_ = v .- mean(v; dims=2)
+    u_ = u .- Statistics.mean(u)
+    v_ = v .- Statistics.mean(v; dims=2)
     q = v_ * u_ / length(u)
     Q = v * (u_ .* v') / length(u)
     return (q = q, Q = Q)

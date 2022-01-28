@@ -1,5 +1,6 @@
 using Test, LinearAlgebra, Statistics
-import RBMs12Con, Zygote
+import RBMs12Con
+import Zygote
 
 @testset "estimate_q, estimate_Q, estimate_qQ" begin
     u = rand(0:1, 10)

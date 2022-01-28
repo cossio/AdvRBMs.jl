@@ -1,12 +1,14 @@
 module RBMs12Con
 
-using LinearAlgebra, Statistics, Random
-using ValueHistories: MVHistory
+import LinearAlgebra
+import Statistics
+import Random
+import ValueHistories
 import RestrictedBoltzmannMachines as RBMs
-using RestrictedBoltzmannMachines: RBM
 
 include("util.jl")
 include("qQ.jl")
 include("proj.jl")
+include("advpcd.jl")
 
 end # module

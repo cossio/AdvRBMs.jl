@@ -1,7 +1,7 @@
 """
     project!(w, q)
 
-Projects weigths `w` using the given constraints.
+Projects weigths `w` to the subspace orthogonal to `q`.
 """
 project!(w::AbstractArray, ::Nothing = nothing) = w
 function project!(w::AbstractArray, q::AbstractArray)
