@@ -26,7 +26,7 @@ end
 
 function ∂wQw(w::AbstractMatrix, Q::AbstractMatrix)
     @assert size(w, 1) == size(Q, 1) == size(Q, 2)
-    @assert issymmetric(Q)
+    @assert LinearAlgebra.issymmetric(Q)
     Qw = Q * w
     return 2Qw * (w' * Qw)
 end
@@ -40,6 +40,6 @@ function sylvester_projection(A::AbstractMatrix, X::AbstractMatrix)
     @assert size(A) == size(X)
     AA = A'*A
     AX = A'*X
-    L = sylvester(AA, AA, -(AX + AX'))
+    L = LinearAlgebra.sylvester(AA, AA, -(AX + AX'))
     return X - A * L
 end
