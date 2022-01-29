@@ -13,8 +13,7 @@ function advpcd!(rbm::RBMs.RBM, data::AbstractArray;
     q::Union{AbstractArray, Nothing} = nothing, # 1st-order constraint
     Q::Union{AbstractArray, Nothing} = nothing, # 2nd-order constraint
     λQ::Real = Inf, # 2nd-order penalty
-    c1::CartesianIndices = CartesianIndices(size(rbm.hidden)), # hidden units affected by 1st order constraint
-    c2::CartesianIndices = CartesianIndices(size(rbm.hidden)), # hidden units affected by 2nd order constraint
+    μc::CartesianIndices = CartesianIndices(size(rbm.hidden)) # constrained hidden units
 )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
     @assert isnothing(wts) || _nobs(data) == _nobs(wts)
@@ -24,8 +23,7 @@ function advpcd!(rbm::RBMs.RBM, data::AbstractArray;
     # initialize fantasy chains by sampling visible layer
     vm = RBMs.transfer_sample(rbm.visible, falses(size(rbm.visible)..., batchsize))
 
-    C1 = CartesianIndices(axes(CartesianIndices(size(rbm.visible)))..., axes(c1)...)
-    C2 = CartesianIndices(axes(CartesianIndices(size(rbm.visible)))..., axes(c2)...)
+    ℐ = CartesianIndices(axes(CartesianIndices(size(rbm.visible)))..., axes(μc)...)
 
     for epoch in 1:epochs
         batches = RBMs.minibatches(data, wts; batchsize = batchsize)
@@ -33,14 +31,14 @@ function advpcd!(rbm::RBMs.RBM, data::AbstractArray;
             vm = RBMs.sample_v_from_v(rbm, vm; steps = steps)
             ∂ = RBMs.∂contrastive_divergence(rbm, vd, vm; wd, stats)
             if λQ == Inf
-                ∂project!(view(∂.w, mask_units), q, Q)
+                ∂project!(view(∂.w, ℐ), q, Q)
             else
-                ∂.w .+= λQ .* ∂wQw(view(rbm.w, mask_units), Q)
+                ∂.w .+= λQ .* ∂wQw(view(rbm.w, ℐ), Q)
             end
             RBMs.update!(optimizer, rbm, ∂)
             push!(history, :∂, RBMs.gradnorms(∂))
         end
-        project!(view(rbm.w, mask_units), q)
+        project!(view(rbm.w, ℐ), q)
 
         lpl = RBMs.wmean(log_pseudolikelihood(rbm, data); wts)
         push!(history, :lpl, lpl)

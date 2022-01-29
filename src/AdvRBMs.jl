@@ -1,4 +1,4 @@
-module RBMs12Con
+module AdvRBMs
 
 import LinearAlgebra
 import Statistics
@@ -7,7 +7,7 @@ import ValueHistories
 import RestrictedBoltzmannMachines as RBMs
 
 include("util.jl")
-include("qQ.jl")
+include("estimate_qQ.jl")
 include("proj.jl")
 include("advpcd.jl")
 

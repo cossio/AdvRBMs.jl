@@ -1,4 +1,4 @@
-name = "RBMs12Con"
+name = "AdvRBMs"
 uuid = "5c8d321f-d88f-4112-b4bc-67901fc2de0a"
 authors = ["Jorge Fernandez-de-Cossio-Diaz <j.cossio.diaz@gmail.com>"]
 version = "0.1.0-DEV"
