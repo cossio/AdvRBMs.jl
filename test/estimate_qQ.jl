@@ -1,9 +1,9 @@
-using Test, LinearAlgebra, Statistics
+using Test, LinearAlgebra, Statistics, Random
 import AdvRBMs
 import Zygote
 
 @testset "estimate_q, estimate_Q, estimate_qQ" begin
-    u = rand(0:1, 10)
+    u = bitrand(10)
     v = randn(5, 3, 10)
 
     q = dropdims(mean(reshape(u,1,1,:) .* v; dims=3) - mean(u) * mean(v; dims=3); dims=3)
