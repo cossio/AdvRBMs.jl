@@ -1,4 +1,6 @@
-using SafeTestsets
+import MKL
+using SafeTestsets: @safetestset
 
-@time @safetestset "util" begin include("util.jl") end
-@time @safetestset "estimate_qQ" begin include("estimate_qQ.jl") end
+@time @safetestset "proj" begin include("proj.jl") end
+@time @safetestset "calc_qQ" begin include("calc_qQ.jl") end
+@time @safetestset "advpcd" begin include("advpcd.jl") end
