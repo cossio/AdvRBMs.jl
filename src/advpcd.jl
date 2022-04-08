@@ -84,10 +84,10 @@ function advpcd!(
         ∂reg!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
 
         if 0 < λq < Inf
-            ∂.w .+= λq .* ∂qw(view(weights(rbm), 𝒱, ℋ), q)
+            view(∂.w, 𝒱, ℋ) .+= λq .* ∂qw(view(weights(rbm), 𝒱, ℋ), q)
         end
         if 0 < λQ < Inf
-            ∂.w .+= λQ .* ∂wQw(view(weights(rbm), 𝒱, ℋ), Q)
+            view(∂.w, 𝒱, ℋ) .+= λQ .* ∂wQw(view(weights(rbm), 𝒱, ℋ), Q)
         end
 
         if λq == Inf # hard 1st-order constraint
