@@ -10,6 +10,8 @@ using AdvRBMs: calc_q, calc_Q, calc_qQ
     q = dropdims(mean(reshape(u,1,1,:) .* v; dims=3) - mean(u) * mean(v; dims=3); dims=3)
     @test q ≈ @inferred calc_q(u, v)
 
+    @test calc_q(u, v) ≈ calc_q(u, v; wts = ones(10))
+
     u_ = mean(u)
     Q = [mean((u .- u_) .* v[i,:] .* v[j,:]) for i in CartesianIndices((5,3)), j in CartesianIndices((5,3))]
     @test Q ≈ @inferred calc_Q(u, v)

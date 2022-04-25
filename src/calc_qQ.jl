@@ -1,12 +1,19 @@
-function calc_q(u::AbstractVector{<:Bool}, v::AbstractArray)
+function calc_q(u::AbstractVector{<:Bool}, v::AbstractArray; wts::Union{Nothing,AbstractVector} = nothing)
     @assert length(u) == size(v, ndims(v)) # same number of examples
-    q = calc_q(u, reshape(v, :, length(u)))
+    q = calc_q(u, reshape(v, :, length(u)); wts)
     return reshape(q, Base.front(size(v)))
 end
 
-function calc_q(u::AbstractVector{<:Bool}, v::AbstractMatrix)
+function calc_q(u::AbstractVector{<:Bool}, v::AbstractMatrix; wts::Union{Nothing,AbstractVector} = nothing)
     @assert length(u) == size(v, 2) # same number of examples
-    return (v .- mean(v; dims=2)) * (u .- mean(u)) / length(u)
+    if isnothing(wts)
+        return (v .- mean(v; dims=2)) * (u .- mean(u)) / length(u)
+    else
+        @assert length(wts) == length(u)
+        v_mean = v * wts / sum(wts)
+        u_mean = dot(u, wts) / sum(wts)
+        return (v .- v_mean) * (wts .* (u .- u_mean)) / sum(wts)
+    end
 end
 
 function calc_Q(u::AbstractVector{<:Bool}, v::AbstractMatrix)
