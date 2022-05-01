@@ -1,7 +1,9 @@
 """
-    advpcd!(rbm, data)
+    advpcd!(rbm, data; q, Q, ...)
 
 Trains the RBM on data using Persistent Contrastive divergence with constraints.
+Matrix `q` contains the 1st-order constraints, that `q[...,t]' * W` be small, for each `t`.
+Matrix `Q` contains the 2nd-order constraints, that `W' * Q[...,t] * W` be small, for each `t`.
 """
 function advpcd!(
     rbm::RBM,
@@ -33,8 +35,8 @@ function advpcd!(
 
     callback = nothing, # called for every batch
 
-    q::Union{AbstractArray, Nothing} = nothing, # 1st-order adversarial constraint
-    Q::Union{AbstractArray, Nothing} = nothing, # 2nd-order adversarial constraint
+    q::Union{AbstractArray, Nothing} = nothing, # 1st-order constraints
+    Q::Union{AbstractArray, Nothing} = nothing, # 2nd-order constraints
     λq::Real = isnothing(q) ? 0 : Inf, # 1st-order adversarial soft constraint, penalty
     λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
 
@@ -53,8 +55,8 @@ function advpcd!(
 
     @assert 0 ≤ λq ≤ Inf # set λq = Inf for hard 1st-order constraint
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported
-    @assert isnothing(q) && iszero(λq) || size(q) == size(visible(rbm))
-    @assert isnothing(Q) && iszero(λQ) || size(Q) == (size(q)..., size(q)...)
+    @assert isnothing(q) && iszero(λq) || size(q) == (size(visible(rbm))..., size(q)[end])
+    @assert isnothing(Q) && iszero(λQ) || size(Q) == (size(q)..., size(q)..., size(Q)[end])
 
     # gauge constraints
     zerosum && zerosum!(rbm)
@@ -62,7 +64,7 @@ function advpcd!(
 
     if λq == Inf # 1st-order constraint is hard
         # impose 1st-order constraint on initial weights
-        orthogonal_projection!(view(weights(rbm), 𝒱, ℋ), q)
+        kernelproj!(view(weights(rbm), 𝒱, ℋ), q)
     end
 
     for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize))
@@ -92,7 +94,7 @@ function advpcd!(
 
         if λq == Inf # hard 1st-order constraint
             # project gradient before feeding it to optimizer algorithm
-            orthogonal_projection!(view(∂.w, 𝒱, ℋ), q)
+            kernelproj!(view(∂.w, 𝒱, ℋ), q)
         end
 
         # compute parameter update step, according to optimizer algorithm
@@ -105,7 +107,7 @@ function advpcd!(
         RBMs.update!(rbm, ∂)
 
         if λq == Inf
-            orthogonal_projection!(view(weights(rbm), 𝒱, ℋ), q)
+            kernelproj!(view(weights(rbm), 𝒱, ℋ), q)
         end
 
         # respect gauge constraints

@@ -1,46 +1,94 @@
-function calc_q(u::AbstractVector{<:Bool}, v::AbstractArray; wts::Union{Nothing,AbstractVector} = nothing)
+const Wts = Union{Nothing,AbstractVector}
+
+# for binary labels
+function calc_q(u::AbstractVector{Bool}, v::AbstractArray; wts::Wts = nothing)
     @assert length(u) == size(v, ndims(v)) # same number of examples
     q = calc_q(u, reshape(v, :, length(u)); wts)
-    return reshape(q, Base.front(size(v)))
+    return reshape(q, front(size(v))..., 1)
 end
 
-function calc_q(u::AbstractVector{<:Bool}, v::AbstractMatrix; wts::Union{Nothing,AbstractVector} = nothing)
+# for binary labels
+function calc_q(u::AbstractVector{Bool}, v::AbstractMatrix; wts::Wts = nothing)
     @assert length(u) == size(v, 2) # same number of examples
+    @assert 0 < mean(u) < 1 # non-singular
     if isnothing(wts)
-        return (v .- mean(v; dims=2)) * (u .- mean(u)) / length(u)
+        q = (v .- mean(v; dims=2)) * (u .- mean(u)) / length(u)
     else
         @assert length(wts) == length(u)
         v_mean = v * wts / sum(wts)
         u_mean = dot(u, wts) / sum(wts)
-        return (v .- v_mean) * (wts .* (u .- u_mean)) / sum(wts)
+        q = (v .- v_mean) * (wts .* (u .- u_mean)) / sum(wts)
     end
+    return reshape(q, length(q), 1)
 end
 
-function calc_Q(u::AbstractVector{<:Bool}, v::AbstractMatrix)
+# for categorical labels (u is onehot encoded)
+function calc_q(u::AbstractMatrix{Bool}, v::AbstractArray; wts::Wts = nothing)
+    v_flat = reshape(v, :, size(v)[end])
+    q_flat = calc_q(u, v_flat; wts)
+    return reshape(q_flat, front(size(v))..., size(q_flat, 2))
+end
+
+# for categorical labels (u is onehot encoded)
+function calc_q(u::AbstractMatrix{Bool}, v::AbstractMatrix; wts::Wts = nothing)
+    @assert size(u, 2) == size(v, 2) # number of samples
+    U = u .- wmean(u; dims=2, wts)
+    V = v .- wmean(v; dims=2, wts)
+    if isnothing(wts)
+        q = V * U' / size(v, 2)
+    else
+        @assert length(wts) == size(v, 2)
+        q = V * Diagonal(wts) * U' / sum(wts)
+    end
+    return q[:, 2:end] # we can drop a row because it is a linear combination of the others
+end
+
+# for binary labels
+function calc_Q(u::AbstractVector{Bool}, v::AbstractMatrix; wts::Wts = nothing)
     @assert length(u) == size(v, 2)
-    u_ = u .- mean(u)
-    return v * (u_ .* v') / length(u)
+    U = u .- wmean(u; wts)
+    V = v .- wmean(v; wts, dims=2)
+    if isnothing(wts)
+        Q = V * (U .* V') / length(u)
+    else
+        Q = V * Diagonal(wts) * (U .* V') / sum(wts)
+    end
+    return reshape(Q, size(Q)..., 1)
 end
 
-function calc_Q(u::AbstractVector{<:Bool}, v::AbstractArray)
+# for binary labels
+function calc_Q(u::AbstractVector{Bool}, v::AbstractArray; wts::Wts = nothing)
     @assert length(u) == size(v)[end]
-    Q = calc_Q(u, reshape(v, :, length(u)))
-    return reshape(Q, Base.front(size(v))..., Base.front(size(v))...)
+    Q = calc_Q(u, reshape(v, :, length(u)); wts)
+    return reshape(Q, front(size(v))..., front(size(v))..., 1)
 end
 
-function calc_qQ(u::AbstractVector{<:Bool}, v::AbstractMatrix)
-    @assert length(u) == size(v, 2)
-    u_ = u .- mean(u)
-    v_ = v .- mean(v; dims=2)
-    q = v_ * u_ / length(u)
-    Q = v * (u_ .* v') / length(u)
-    return (q = q, Q = Q)
+# for categorical labels
+function calc_Q(u::AbstractMatrix{Bool}, v::AbstractArray; wts::Wts = nothing)
+    @assert size(u, 2) == size(v)[end]
+    Q = zeros(front(size(v))..., front(size(v))..., size(u, 1))
+    for k in 1:size(u, 1)
+        selectdim(Q, ndims(Q), k) .= calc_Q(u[k,:], v; wts)
+    end
+    return Q
 end
 
-function calc_qQ(u::AbstractVector{<:Bool}, v::AbstractArray)
-    @assert length(u) == size(v)[end]
-    q_, Q_ = calc_qQ(u, reshape(v, :, size(v)[end]))
-    q = reshape(q_, Base.front(size(v)))
-    Q = reshape(Q_, Base.front(size(v))..., Base.front(size(v))...)
-    return (q = q, Q = Q)
+function calc_q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T<:Number}
+    q = calc_q(u, v; wts)
+    return T.(q)
 end
+
+function calc_Q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T<:Number}
+    Q = calc_Q(u, v; wts)
+    return T.(Q)
+end
+
+# concatenate across last dimension
+batchcat(A::AbstractArray, B::AbstractArray...) = cat(A, B...; dims=ndims(A))
+
+# # for categorical labels
+# function calc_Q(u::AbstractMatrix{Bool}, v::AbstractArray; wts::Wts = nothing)
+#     @assert length(u) == size(v)[end]
+#     Q = calc_Q(u, reshape(v, :, length(u)); wts)
+#     return reshape(Q, front(size(v))..., front(size(v))..., 1)
+# end

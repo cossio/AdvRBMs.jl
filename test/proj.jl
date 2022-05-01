@@ -1,32 +1,44 @@
 import Zygote
 using Test: @test, @testset, @inferred
 using LinearAlgebra: norm, dot
-using AdvRBMs: ∂qw, ∂wQw, orthogonal_projection, sylvester_projection
+using AdvRBMs: kernelproj, kernelproj!, ∂qw, ∂wQw, sylvester_projection
 
-@testset "orthogonal_projection" begin
-    w, q = randn(10), randn(10)
-    wp = @inferred orthogonal_projection(w, q)
-    dot(wp, q) ≤ 1e-10min(norm(wp), norm(q))
-    @test norm(wp)^2 + dot(w, q)^2 / norm(q)^2 ≈ norm(w)^2 # pythagoras
-end
+@testset "kernelproj" begin
+    w = randn(28,7)
+    q = randn(28,2)
+    wp = @inferred kernelproj(w, q)
+    @test norm(q' * wp) < 1e-9 * min(norm(w), norm(q))
+    @test norm(wp)^2 + norm(q * ((q' * q) \ (q' * w)))^2 ≈ norm(w)^2 # pythagoras
 
-@testset "∂wQw" begin
-    w = randn(7, 3)
-    Q = randn(7, 7)
-    Q = Q + Q' # make symmetric
-    ∂, = Zygote.gradient(w) do w
-        norm(w' * Q * w)^2 / 2
-    end
-    @test ∂ ≈ @inferred ∂wQw(w, Q)
+    w = randn(28,28,7)
+    q = randn(28,28,2)
+    wp = @inferred kernelproj(w, q)
+    @test norm(sum(reshape(q, 28, 28, 1, 2) .* wp, dims=(1,2))) < 1e-9 * norm(sum(reshape(q, 28, 28, 1, 2) .* w, dims=(1,2)))
+
+    @test wp ≈ @inferred kernelproj!(w, q)
+    @test w ≈ wp
 end
 
 @testset "∂qw" begin
-    w = randn(7, 3)
-    q = randn(7)
+    w = randn(7, 5)
+    q = randn(7, 2)
     ∂, = Zygote.gradient(w) do w
         norm(q' * w)^2 / 2
     end
     @test ∂ ≈ @inferred ∂qw(w, q)
+end
+
+@testset "∂wQw" begin
+    w = randn(7, 5)
+    Q = randn(7, 7, 2)
+    # make symmetric
+    for k in 1:2
+        Q[:,:,k] = Q[:,:,k] + Q[:,:,k]'
+    end
+    ∂, = Zygote.gradient(w) do w
+        sum(norm(w' * Q[:,:,k] * w)^2 / 2 for k in 1:2)
+    end
+    @test ∂ ≈ @inferred ∂wQw(w, Q)
 end
 
 @testset "sylvester_projection" begin

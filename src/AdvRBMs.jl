@@ -1,14 +1,15 @@
 module AdvRBMs
 
 import RestrictedBoltzmannMachines as RBMs
-using LinearAlgebra: issymmetric, sylvester, dot
+using Base: front
+using LinearAlgebra: issymmetric, sylvester, dot, Diagonal
 using Statistics: mean
 using ValueHistories: MVHistory
 using RestrictedBoltzmannMachines: RBM, transfer_sample, inputs_v_to_h, sample_v_from_v,
     ∂free_energy, subtract_gradients, ∂reg!, gradnorms, batchmean, meanvar_from_inputs,
     _nobs, default_optimizer, fantasy_init, suffstats, minibatches,
     update!, center_gradient, uncenter_step, gradnorms,
-    zerosum!, rescale_hidden!, weights, visible, hidden, grad2mean, grad2var
+    zerosum!, rescale_hidden!, weights, visible, hidden, grad2mean, grad2var, wmean
 
 include("calc_qQ.jl")
 include("proj.jl")
