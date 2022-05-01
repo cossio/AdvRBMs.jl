@@ -1,5 +1,15 @@
 const Wts = Union{Nothing,AbstractVector}
 
+function calc_qs(u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing)
+    q = calc_q(u, v; wts)
+    return [collect(selectdim(q, ndims(q), k)) for k in 1:size(q)[end]]
+end
+
+function calc_Qs(u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing)
+    Q = calc_Q(u, v; wts)
+    return [collect(selectdim(Q, ndims(Q), k)) for k in 1:size(q)[end]]
+end
+
 # for binary labels
 function calc_q(u::AbstractVector{Bool}, v::AbstractArray; wts::Wts = nothing)
     @assert length(u) == size(v, ndims(v)) # same number of examples

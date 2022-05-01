@@ -5,7 +5,7 @@ Trains the RBM on data using Persistent Contrastive divergence with constraints.
 Matrix `q` contains the 1st-order constraints, that `q[...,t]' * W` be small, for each `t`.
 Matrix `Q` contains the 2nd-order constraints, that `W' * Q[...,t] * W` be small, for each `t`.
 """
-function advpcd!(
+function advhard!(
     rbm::RBM,
     data::AbstractArray;
     batchsize::Int = 1,
@@ -35,13 +35,14 @@ function advpcd!(
 
     callback = nothing, # called for every batch
 
-    q::Union{AbstractArray, Nothing} = nothing, # 1st-order constraints
-    Q::Union{AbstractArray, Nothing} = nothing, # 2nd-order constraints
-    λq::Real = isnothing(q) ? 0 : Inf, # 1st-order adversarial soft constraint, penalty
-    λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
+    qs::AbstractVector = [], # 1st-order constraints
+    Qs::AbstractVector = [], # 2nd-order constraints
+    λq::Real = 0, # 1st-order adversarial soft constraint, penalty
+    λQ::Real = 0,
 
     # indices of constrained hidden units
-    ℋ::CartesianIndices = CartesianIndices(size(hidden(rbm)))
+    ℋ1::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(hidden(rbm)))],
+    ℋ2::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(hidden(rbm)))]
 )
     @assert size(data) == (size(visible(rbm))..., size(data)[end])
     @assert isnothing(wts) || _nobs(data) == _nobs(wts)
@@ -53,19 +54,20 @@ function advpcd!(
     # indices in visible dimensions
     𝒱 = CartesianIndices(size(visible(rbm)))
 
-    @assert 0 ≤ λq ≤ Inf # set λq = Inf for hard 1st-order constraint
-    @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported
-    @assert isnothing(q) && iszero(λq) || size(q) == (size(visible(rbm))..., size(q)[end])
-    @assert isnothing(Q) && iszero(λQ) || size(Q) == (front(size(q))..., front(size(q))..., size(Q)[end])
+    @assert 0 ≤ λq < Inf
+    @assert 0 ≤ λQ < Inf
+    for q in qs
+        @assert size(q) == size(visible(rbm))
+    end
+    for Q in Qs
+        @assert size(Q) == (size(q)..., size(q)...)
+    end
+    @assert length(ℋ1) == length(qs)
+    @assert length(ℋ2) == length(Qs)
 
     # gauge constraints
     zerosum && zerosum!(rbm)
     standardize_hidden && rescale_hidden!(rbm, inv.(sqrt.(var_h .+ ϵh)))
-
-    if λq == Inf # 1st-order constraint is hard
-        # impose 1st-order constraint on initial weights
-        kernelproj!(view(weights(rbm), 𝒱, ℋ), q)
-    end
 
     for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize))
         vm .= sample_v_from_v(rbm, vm; steps)
@@ -86,15 +88,14 @@ function advpcd!(
         ∂reg!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
 
         if 0 < λq < Inf
-            view(∂.w, 𝒱, ℋ) .+= λq .* ∂qw(view(weights(rbm), 𝒱, ℋ), q)
+            for (q, ℋ) in zip(qs, ℋ1)
+                view(∂.w, 𝒱, ℋ) .+= λq .* ∂qw(view(weights(rbm), 𝒱, ℋ), q)
+            end
         end
         if 0 < λQ < Inf
-            view(∂.w, 𝒱, ℋ) .+= λQ .* ∂wQw(view(weights(rbm), 𝒱, ℋ), Q)
-        end
-
-        if λq == Inf # hard 1st-order constraint
-            # project gradient before feeding it to optimizer algorithm
-            kernelproj!(view(∂.w, 𝒱, ℋ), q)
+            for (Q, ℋ) in zip(Qs, ℋ2)
+                view(∂.w, 𝒱, ℋ) .+= λQ .* ∂wQw(view(weights(rbm), 𝒱, ℋ), Q)
+            end
         end
 
         # compute parameter update step, according to optimizer algorithm
@@ -105,10 +106,6 @@ function advpcd!(
         end
 
         RBMs.update!(rbm, ∂)
-
-        if λq == Inf
-            kernelproj!(view(weights(rbm), 𝒱, ℋ), q)
-        end
 
         # respect gauge constraints
         zerosum && zerosum!(rbm)
