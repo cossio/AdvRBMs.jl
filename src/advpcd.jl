@@ -35,7 +35,7 @@ function advpcd!(
 
     callback = nothing, # called for every batch
 
-    q::Union{AbstractArray, Nothing} = nothing, # 1st-order constraints
+    q::Union{AbstractArray, Nothing} = nothing, # 1st-order constraints (should be zero-sum for Potts layers)
     Q::Union{AbstractArray, Nothing} = nothing, # 2nd-order constraints
     λq::Real = isnothing(q) ? 0 : Inf, # 1st-order adversarial soft constraint, penalty
     λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
