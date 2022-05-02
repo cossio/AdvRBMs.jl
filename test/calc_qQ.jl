@@ -1,7 +1,7 @@
 using Test: @testset, @test, @inferred
 using Statistics: mean
 using Random: bitrand
-using AdvRBMs: calc_q, calc_Q
+using AdvRBMs: calc_q, calc_Q, calc_qs, calc_Qs
 
 @testset "calc_q, calc_Q" begin
     u = bitrand(10)
@@ -35,4 +35,11 @@ end
     Q_flat = reshape(Q, 5 * 3, 5 * 3, 2)
     @test Q_flat[:,:,1] ≈ Q_flat[:,:,1]'
     @test Q_flat[:,:,2] ≈ Q_flat[:,:,2]'
+
+    qs = @inferred calc_qs(u, v)
+    Qs = @inferred calc_Qs(u, v)
+
+    @test only(qs) ≈ q
+    @test Qs[1] ≈ Q[:,:,:,:,1]
+    @test Qs[2] ≈ Q[:,:,:,:,2]
 end

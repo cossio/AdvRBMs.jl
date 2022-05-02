@@ -1,14 +1,17 @@
 const Wts = Union{Nothing,AbstractVector}
 
-function calc_qs(u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing)
-    q = calc_q(u, v; wts)
+function calc_qs(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T}
+    q = calc_q(T, u, v; wts)
     return [collect(selectdim(q, ndims(q), k)) for k in 1:size(q)[end]]
 end
 
-function calc_Qs(u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing)
+function calc_Qs(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T}
     Q = calc_Q(u, v; wts)
-    return [collect(selectdim(Q, ndims(Q), k)) for k in 1:size(q)[end]]
+    return [collect(selectdim(Q, ndims(Q), k)) for k in 1:size(Q)[end]]
 end
+
+calc_qs(u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) = calc_qs(Float64, u, v; wts)
+calc_Qs(u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) = calc_Qs(Float64, u, v; wts)
 
 # for binary labels
 function calc_q(u::AbstractVector{Bool}, v::AbstractArray; wts::Wts = nothing)
