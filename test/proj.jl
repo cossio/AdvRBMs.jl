@@ -1,7 +1,7 @@
 import Zygote
 using Test: @test, @testset, @inferred
 using LinearAlgebra: norm, dot
-using AdvRBMs: kernelproj, kernelproj!, ∂qw, ∂wQw, sylvester_projection
+using AdvRBMs: kernelproj, ∂qw, ∂wQw, sylvester_projection
 
 @testset "kernelproj" begin
     w = randn(28,7)
@@ -14,9 +14,6 @@ using AdvRBMs: kernelproj, kernelproj!, ∂qw, ∂wQw, sylvester_projection
     q = randn(28,28,2)
     wp = @inferred kernelproj(w, q)
     @test norm(sum(reshape(q, 28, 28, 1, 2) .* wp, dims=(1,2))) < 1e-9 * norm(sum(reshape(q, 28, 28, 1, 2) .* w, dims=(1,2)))
-
-    @test wp ≈ @inferred kernelproj!(w, q)
-    @test w ≈ wp
 end
 
 @testset "∂qw" begin

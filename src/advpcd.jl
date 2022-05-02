@@ -64,7 +64,7 @@ function advpcd!(
 
     if λq == Inf # 1st-order constraint is hard
         # impose 1st-order constraint on initial weights
-        kernelproj!(view(weights(rbm), 𝒱, ℋ), q)
+        rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
     end
 
     for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize))
@@ -86,15 +86,15 @@ function advpcd!(
         ∂reg!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
 
         if 0 < λq < Inf
-            view(∂.w, 𝒱, ℋ) .+= λq .* ∂qw(view(weights(rbm), 𝒱, ℋ), q)
+            ∂.w[𝒱, ℋ] .+= λq .* ∂qw(rbm.w[𝒱, ℋ], q)
         end
         if 0 < λQ < Inf
-            view(∂.w, 𝒱, ℋ) .+= λQ .* ∂wQw(view(weights(rbm), 𝒱, ℋ), Q)
+            ∂.w[𝒱, ℋ] .+= λQ .* ∂wQw(rbm.w[𝒱, ℋ], Q)
         end
 
         if λq == Inf # hard 1st-order constraint
             # project gradient before feeding it to optimizer algorithm
-            kernelproj!(view(∂.w, 𝒱, ℋ), q)
+            ∂.w[𝒱, ℋ] .= kernelproj(∂.w[𝒱, ℋ], q)
         end
 
         # compute parameter update step, according to optimizer algorithm
@@ -107,7 +107,7 @@ function advpcd!(
         RBMs.update!(rbm, ∂)
 
         if λq == Inf
-            kernelproj!(view(weights(rbm), 𝒱, ℋ), q)
+            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
         end
 
         # respect gauge constraints

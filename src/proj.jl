@@ -15,11 +15,6 @@ end
 #= The following parenthesization avoids intermediate large matrices. =#
 kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * ((q' * q) \ (q' * w))
 
-# in-place version: overwrites w in place
-function kernelproj!(w::AbstractArray, q::AbstractArray)
-    return w .= kernelproj(w, q)
-end
-
 """
     ∂qw(w, q)
 
@@ -86,7 +81,7 @@ project∂!(::AbstractArray, ::Nothing = nothing, ::Nothing = nothing) = nothing
 
 function project∂!(∂w::AbstractArray, q::AbstractArray, ::Nothing = nothing)
     @assert size(∂w)[1:ndims(q)] == size(q)
-    return kernelproj!(∂w, q)
+    return ∂w .= kernelproj(∂w, q)
 end
 
 function project∂!(∂w::AbstractArray, ::Nothing, Q::AbstractArray)
@@ -99,7 +94,7 @@ end
 function project∂!(∂w::AbstractArray, q::AbstractArray, Q::AbstractArray)
     @assert size(Q) == (size(q)..., size(q)...)
     Qw = Q * ∂w
-    kernelproj!(Qw, q)
+    Qw .= kernelproj(Qw, q)
     ∂w .= sylvester_projection(Qw, ∂w)
     return ∂w
 end
