@@ -2,7 +2,7 @@ module AdvRBMs
 
 import RestrictedBoltzmannMachines as RBMs
 using Base: front
-using LinearAlgebra: issymmetric, sylvester, dot, Diagonal
+using LinearAlgebra: sylvester, dot, Diagonal
 using Statistics: mean
 using ValueHistories: MVHistory
 using RestrictedBoltzmannMachines: RBM, transfer_sample, inputs_v_to_h, sample_v_from_v,

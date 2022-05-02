@@ -32,4 +32,7 @@ end
     @test size(q) == (5,3,1)
     @test size(Q) == (5,3,5,3,2)
     @test selectdim(Q, ndims(Q), 1) ≈ -selectdim(Q, ndims(Q), 2)
+    Q_flat = reshape(Q, 5 * 3, 5 * 3, 2)
+    @test Q_flat[:,:,1] ≈ Q_flat[:,:,1]'
+    @test Q_flat[:,:,2] ≈ Q_flat[:,:,2]'
 end
