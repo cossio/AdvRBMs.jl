@@ -14,5 +14,6 @@ using RestrictedBoltzmannMachines: RBM, transfer_sample, inputs_v_to_h, sample_v
 include("calc_qQ.jl")
 include("proj.jl")
 include("advpcd.jl")
+include("advsoft.jl")
 
 end # module

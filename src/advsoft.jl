@@ -1,11 +1,11 @@
 """
-    advpcd!(rbm, data; q, Q, ...)
+    advpcdsoft!(rbm, data; q, Q, ...)
 
-Trains the RBM on data using Persistent Contrastive divergence with constraints.
+Trains the RBM on data using Persistent Contrastive divergence with (soft) constraints.
 Matrix `q` contains the 1st-order constraints, that `q[...,t]' * W` be small, for each `t`.
 Matrix `Q` contains the 2nd-order constraints, that `W' * Q[...,t] * W` be small, for each `t`.
 """
-function advhard!(
+function advpcdsoft!(
     rbm::RBM,
     data::AbstractArray;
     batchsize::Int = 1,
@@ -38,7 +38,7 @@ function advhard!(
     qs::AbstractVector = [], # 1st-order constraints
     Qs::AbstractVector = [], # 2nd-order constraints
     λq::Real = 0, # 1st-order adversarial soft constraint, penalty
-    λQ::Real = 0,
+    λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
 
     # indices of constrained hidden units
     ℋ1::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(hidden(rbm)))],
@@ -89,12 +89,12 @@ function advhard!(
 
         if 0 < λq < Inf
             for (q, ℋ) in zip(qs, ℋ1)
-                view(∂.w, 𝒱, ℋ) .+= λq .* ∂qw(view(weights(rbm), 𝒱, ℋ), q)
+                ∂.w[𝒱, ℋ] .+= λq .* ∂qw(rbm.w[𝒱, ℋ], q)
             end
         end
         if 0 < λQ < Inf
             for (Q, ℋ) in zip(Qs, ℋ2)
-                view(∂.w, 𝒱, ℋ) .+= λQ .* ∂wQw(view(weights(rbm), 𝒱, ℋ), Q)
+                ∂.w[𝒱, ℋ] .+= λQ .* ∂wQw(rbm.w[𝒱, ℋ], Q)
             end
         end
 
