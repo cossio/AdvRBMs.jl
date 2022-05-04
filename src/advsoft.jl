@@ -85,7 +85,7 @@ function advpcdsoft!(
         end
 
         # regularize
-        ∂reg!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
+        ∂regularize!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
 
         if 0 < λq < Inf
             for (q, ℋ) in zip(qs, ℋ1)
