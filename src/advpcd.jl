@@ -62,6 +62,8 @@ function advpcd!(
     zerosum && zerosum!(rbm)
     standardize_hidden && rescale_hidden!(rbm, inv.(sqrt.(var_h .+ ϵh)))
 
+    wts_mean = mean_maybe(wts)
+
     if λq == Inf # 1st-order constraint is hard
         # impose 1st-order constraint on initial weights
         rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
@@ -73,10 +75,14 @@ function advpcd!(
         ∂m = ∂free_energy(rbm, vm)
         ∂ = subtract_gradients(∂d, ∂m)
 
+        batch_weight = mean_maybe(wd) / wts_mean
+        ∂ = gradmult(∂, batch_weight)
+
+        damp = hidden_damp ^ batch_weight
         λh = grad2mean(hidden(rbm), ∂d.hidden)
         νh = grad2var(hidden(rbm), ∂d.hidden)
-        ave_h .= (1 - hidden_damp) * λh .+ hidden_damp .* ave_h
-        var_h .= (1 - hidden_damp) * νh .+ hidden_damp .* var_h
+        ave_h .= (1 - damp) * λh .+ damp .* ave_h
+        var_h .= (1 - damp) * νh .+ damp .* var_h
 
         if center
             ∂ = center_gradient(rbm, ∂, ave_v, ave_h)
