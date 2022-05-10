@@ -6,7 +6,8 @@ using Random: bitrand
 using LinearAlgebra: norm, Diagonal, I, dot
 using Statistics: mean, cor
 using LogExpFunctions: softmax
-using RestrictedBoltzmannMachines: RBM, Binary, BinaryRBM, inputs_v_to_h, wmean, batchmean, mean_h_from_v
+using RestrictedBoltzmannMachines: RBM, Binary, Gaussian, BinaryRBM, inputs_v_to_h, wmean
+using RestrictedBoltzmannMachines: mean_h_from_v, var_h_from_v, batchmean, batchvar
 using RestrictedBoltzmannMachines: free_energy, extensive_sample, initialize!, transfer_mean
 using AdvRBMs: advpcd!
 
@@ -152,4 +153,28 @@ end
     @info @test Prj * vh_student[:,ℋ] ≈ Prj * vh_teacher[:,ℋ] rtol=1e-5
     @info @test norm(q' * (vh_student - vh_teacher)[:,ℋ]) ≈ norm((vh_student - vh_teacher)[:,ℋ]) rtol=1e-4
     @test norm(Prj * (vh_student - vh_teacher)[:,ℋ]) < 1e-2norm(q' * (vh_student - vh_teacher)[:,ℋ])
+end
+
+# test hidden rescaling
+@testset "pcd (no constraint) -- teacher/student, Gaussian, with weights, exact" begin
+    N = 5
+    batchsize = 2^N
+    nupdates = 10000
+    teacher = RBM(Binary(N), Gaussian(1), zeros(N,1))
+    teacher.w[:,1] .= range(-1, 1, length=N)
+    data = extensive_sample(teacher.visible)
+    wts = softmax(-free_energy(teacher, data))
+    @test sum(wts) ≈ 1
+    nsamples = size(data)[end]
+    epochs = train_nepochs(; nsamples, batchsize, nupdates)
+    student = RBM(Binary(N), Gaussian(1), zeros(N,1))
+    initialize!(student, data; wts)
+    student.w .= cos.(1:N)
+    @test transfer_mean(student.visible) ≈ wmean(data; wts, dims=2)
+    advpcd!(student, data; wts, epochs, batchsize, ϵh=1e-2, shuffle=false, mode=:exact, optim=Flux.ADAM())
+    @info @test cor(free_energy(teacher, data), free_energy(student, data)) > 0.99
+    wts_student = softmax(-free_energy(student, data))
+    ν_int = batchmean(student.hidden, var_h_from_v(student, data); wts = wts_student)
+    ν_ext = batchvar(student.hidden, mean_h_from_v(student, data); wts = wts_student)
+    @test only(ν_int + ν_ext) ≈ 1 - 1e-2 # not exactly 1 because of ϵh
 end

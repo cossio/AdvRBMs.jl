@@ -81,11 +81,11 @@ function advpcd!(
         ∂ = gradmult(∂, batch_weight)
 
         ave_h_batch = grad2mean(rbm.hidden, ∂d.hidden)
-        var_h_batch = grad2var(rbm.hidden, ∂d.hidden) .+ ϵh
+        var_h_batch = grad2var(rbm.hidden, ∂d.hidden)
         damp_eff = damp ^ batch_weight
         ave_h .= (1 - damp_eff) * ave_h_batch .+ damp_eff .* ave_h
         var_h .= (1 - damp_eff) * var_h_batch .+ damp_eff .* var_h
-        @assert all(var_h .> 0)
+        @assert all(var_h .+ ϵh .> 0)
 
         # regularize
         ∂regularize!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
@@ -115,7 +115,7 @@ function advpcd!(
 
         # respect gauge constraints
         zerosum && zerosum!(rbm)
-        rescale && rescale_hidden!(rbm, inv.(sqrt.(var_h .+ ϵh)))
+        rescale && rescale_hidden!(rbm, sqrt.(var_h .+ ϵh))
 
         if λq == Inf
             #= Since the adaptive gradients update and
