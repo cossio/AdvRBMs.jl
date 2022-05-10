@@ -41,23 +41,23 @@ function advpcdsoft!(
     λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
 
     # indices of constrained hidden units
-    ℋ1::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(hidden(rbm)))],
-    ℋ2::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(hidden(rbm)))]
+    ℋ1::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))],
+    ℋ2::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))]
 )
-    @assert size(data) == (size(visible(rbm))..., size(data)[end])
+    @assert size(data) == (size(rbm.visible)..., size(data)[end])
     @assert isnothing(wts) || _nobs(data) == _nobs(wts)
 
     # we center units using their average activities
-    ave_v = batchmean(visible(rbm), data; wts)
-    ave_h, var_h = meanvar_from_inputs(hidden(rbm), inputs_v_to_h(rbm, data); wts)
+    ave_v = batchmean(rbm.visible, data; wts)
+    ave_h, var_h = meanvar_from_inputs(rbm.hidden, inputs_v_to_h(rbm, data); wts)
 
     # indices in visible dimensions
-    𝒱 = CartesianIndices(size(visible(rbm)))
+    𝒱 = CartesianIndices(size(rbm.visible))
 
     @assert 0 ≤ λq < Inf
     @assert 0 ≤ λQ < Inf
     for q in qs
-        @assert size(q) == size(visible(rbm))
+        @assert size(q) == size(rbm.visible)
     end
     for Q in Qs
         @assert size(Q) == (size(q)..., size(q)...)
@@ -75,8 +75,8 @@ function advpcdsoft!(
         ∂m = ∂free_energy(rbm, vm)
         ∂ = subtract_gradients(∂d, ∂m)
 
-        λh = grad2mean(hidden(rbm), ∂d.hidden)
-        νh = grad2var(hidden(rbm), ∂d.hidden)
+        λh = grad2mean(rbm.hidden, ∂d.hidden)
+        νh = grad2var(rbm.hidden, ∂d.hidden)
         ave_h .= (1 - hidden_damp) * λh .+ hidden_damp .* ave_h
         var_h .= (1 - hidden_damp) * νh .+ hidden_damp .* var_h
 
