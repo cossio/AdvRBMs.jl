@@ -10,10 +10,9 @@ function advpcd!(
     data::AbstractArray;
     batchsize::Int = 1,
     epochs::Int = 1,
-    wts = nothing,
+    wts::Union{AbstractVector, Nothing} = nothing,
     steps::Int = 1, # fantasy chains MC steps
     optim = default_optimizer(_nobs(data), batchsize, epochs),
-    vm::AbstractArray = fantasy_init(rbm, batchsize), # fantasy chains
     stats = suffstats(rbm, data; wts), # visible layer sufficient statistics
 
     # regularization
@@ -24,16 +23,18 @@ function advpcd!(
 
     # gauge
     zerosum::Bool = true, # zerosum gauge for Potts layers
+    rescale::Bool = true, # scale hidden unit activations to var(h) = 1
     center::Bool = true, # center gradients
 
-    # scale hidden unit activations to var(h) = 1
-    standardize_hidden::Bool = true,
-
     # damping for hidden activity statistics tracking
-    hidden_damp::Real = batchsize / _nobs(data),
+    damp::Real = 1 // 100,
     ϵh = 1e-2, # prevent vanishing var(h)
 
     callback = nothing, # called for every batch
+    mode::Symbol = :pcd, # :pcd, :cd, or :exact
+
+    vm = fantasy_init(rbm; batchsize, mode), # fantasy chains
+    shuffle::Bool = true,
 
     q::Union{AbstractArray, Nothing} = nothing, # 1st-order constraints (should be zero-sum for Potts layers)
     Q::Union{AbstractArray, Nothing} = nothing, # 2nd-order constraints
@@ -41,66 +42,66 @@ function advpcd!(
     λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
 
     # indices of constrained hidden units
-    ℋ::CartesianIndices = CartesianIndices(size(hidden(rbm)))
+    ℋ::CartesianIndices = CartesianIndices(size(rbm.hidden))
 )
-    @assert size(data) == (size(visible(rbm))..., size(data)[end])
+    @assert size(data) == (size(rbm.visible)..., size(data)[end])
     @assert isnothing(wts) || _nobs(data) == _nobs(wts)
-
-    # we center units using their average activities
-    ave_v = batchmean(visible(rbm), data; wts)
-    ave_h, var_h = meanvar_from_inputs(hidden(rbm), inputs_v_to_h(rbm, data); wts)
-
-    # indices in visible dimensions
-    𝒱 = CartesianIndices(size(visible(rbm)))
+    @assert ϵh ≥ 0
 
     @assert 0 ≤ λq ≤ Inf # set λq = Inf for hard 1st-order constraint
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported
-    @assert isnothing(q) && iszero(λq) || size(q) == (size(visible(rbm))..., size(q)[end])
+    @assert isnothing(q) && iszero(λq) || size(q) == (size(rbm.visible)..., size(q)[end])
     @assert isnothing(Q) && iszero(λQ) || size(Q) == (front(size(q))..., front(size(q))..., size(Q)[end])
+
+    # indices in visible dimensions
+    𝒱 = CartesianIndices(size(rbm.visible))
+
+    # we center units using their average activities
+    ave_v = batchmean(rbm.visible, data; wts)
+    ave_h, var_h = meanvar_from_inputs(rbm.hidden, inputs_v_to_h(rbm, data); wts)
+    @assert all(var_h .+ ϵh .> 0)
 
     # gauge constraints
     zerosum && zerosum!(rbm)
-    standardize_hidden && rescale_hidden!(rbm, inv.(sqrt.(var_h .+ ϵh)))
+    rescale && rescale_hidden!(rbm, sqrt.(var_h .+ ϵh))
 
-    wts_mean = mean_maybe(wts)
+    wts_mean = isnothing(wts) ? 1 : mean(wts)
 
     if λq == Inf # 1st-order constraint is hard
         # impose 1st-order constraint on initial weights
         rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
     end
 
-    for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize))
-        vm .= sample_v_from_v(rbm, vm; steps)
+    for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize, shuffle))
         ∂d = ∂free_energy(rbm, vd; wts = wd, stats)
-        ∂m = ∂free_energy(rbm, vm)
+        ∂m = ∂logpartition(rbm; vd, vm, wd, mode, steps)
         ∂ = subtract_gradients(∂d, ∂m)
 
-        batch_weight = mean_maybe(wd) / wts_mean
+        batch_weight = isnothing(wts) ? 1 : mean(wd) / wts_mean
         ∂ = gradmult(∂, batch_weight)
 
-        damp = hidden_damp ^ batch_weight
-        λh = grad2mean(hidden(rbm), ∂d.hidden)
-        νh = grad2var(hidden(rbm), ∂d.hidden)
-        ave_h .= (1 - damp) * λh .+ damp .* ave_h
-        var_h .= (1 - damp) * νh .+ damp .* var_h
-
-        if center
-            ∂ = center_gradient(rbm, ∂, ave_v, ave_h)
-        end
+        ave_h_batch = grad2mean(rbm.hidden, ∂d.hidden)
+        var_h_batch = grad2var(rbm.hidden, ∂d.hidden) .+ ϵh
+        damp_eff = damp ^ batch_weight
+        ave_h .= (1 - damp_eff) * ave_h_batch .+ damp_eff .* ave_h
+        var_h .= (1 - damp_eff) * var_h_batch .+ damp_eff .* var_h
+        @assert all(var_h .> 0)
 
         # regularize
         ∂regularize!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
 
-        if 0 < λq < Inf
-            ∂.w[𝒱, ℋ] .+= λq .* ∂qw(rbm.w[𝒱, ℋ], q)
-        end
         if 0 < λQ < Inf
             ∂.w[𝒱, ℋ] .+= λQ .* ∂wQw(rbm.w[𝒱, ℋ], Q)
         end
-
-        if λq == Inf # hard 1st-order constraint
-            # project gradient before feeding it to optimizer algorithm
+        if 0 < λq < Inf
+            ∂.w[𝒱, ℋ] .+= λq .* ∂qw(rbm.w[𝒱, ℋ], q)
+        elseif λq == Inf
+            # project the gradient to be orthogonal to q
             ∂.w[𝒱, ℋ] .= kernelproj(∂.w[𝒱, ℋ], q)
+        end
+
+        if center
+            ∂ = center_gradient(rbm, ∂, ave_v, ave_h)
         end
 
         # compute parameter update step, according to optimizer algorithm
@@ -112,13 +113,17 @@ function advpcd!(
 
         RBMs.update!(rbm, ∂)
 
-        if λq == Inf
-            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
-        end
-
         # respect gauge constraints
         zerosum && zerosum!(rbm)
-        standardize_hidden && rescale_hidden!(rbm, inv.(sqrt.(var_h .+ ϵh)))
+        rescale && rescale_hidden!(rbm, inv.(sqrt.(var_h .+ ϵh)))
+
+        if λq == Inf
+            #= Since the adaptive gradients update and
+            the centering might move the weights towards q,
+            we project the weights to be orthogonal to q after
+            each update. =#
+            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
+        end
 
         isnothing(callback) || callback(; rbm, ∂, optim, epoch, batch_idx, vd, wd)
     end

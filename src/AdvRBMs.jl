@@ -10,7 +10,7 @@ using RestrictedBoltzmannMachines: RBM, transfer_sample, inputs_v_to_h, sample_v
     _nobs, default_optimizer, fantasy_init, suffstats, minibatches,
     update!, center_gradient, uncenter_step,
     zerosum!, rescale_hidden!, weights, visible, hidden, grad2mean, grad2var, wmean,
-    mean_maybe, gradmult
+    gradmult, ∂logpartition
 
 include("calc_qQ.jl")
 include("proj.jl")
