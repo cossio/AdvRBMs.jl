@@ -98,17 +98,17 @@ end
 
     v_student = batchmean(student.visible, data; wts = wts_student)
     v_teacher = batchmean(student.visible, data; wts)
-    @info @test v_student ≈ v_teacher rtol=1e-6
+    @info @test v_student ≈ v_teacher rtol=1e-3
 
     h_student = batchmean(student.hidden, mean_h_from_v(student, data); wts=wts_student)
     h_teacher = batchmean(student.hidden, mean_h_from_v(student, data); wts)
-    @info @test h_student ≈ h_teacher rtol=1e-6
+    @info @test h_student ≈ h_teacher rtol=1e-3
 
     vh_student = data * Diagonal(wts_student) * mean_h_from_v(student, data)' / sum(wts_student)
     vh_teacher = data * Diagonal(wts) * mean_h_from_v(student, data)' / sum(wts)
-    @info @test Prj * vh_student ≈ Prj * vh_teacher rtol=1e-5
-    @info @test norm(q' * (vh_student - vh_teacher)) ≈ norm(vh_student - vh_teacher) rtol=1e-6
-    @test norm(Prj * (vh_student - vh_teacher)) < 1e-2norm(q' * (vh_student - vh_teacher))
+    @info @test Prj * vh_student ≈ Prj * vh_teacher rtol=1e-4
+    @info @test norm(q' * (vh_student - vh_teacher)) ≈ norm(vh_student - vh_teacher) rtol=1e-3
+    @test norm(Prj * (vh_student - vh_teacher)) < 0.1norm(q' * (vh_student - vh_teacher))
 end
 
 @testset "advpcd -- teacher/student, Binary, with weights, exact, constraint and one free" begin
