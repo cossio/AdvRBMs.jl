@@ -6,7 +6,7 @@ using Statistics: mean, cor
 using LogExpFunctions: softmax
 using RestrictedBoltzmannMachines: RBM, Binary, Gaussian, BinaryRBM, inputs_h_from_v, wmean
 using RestrictedBoltzmannMachines: mean_h_from_v, var_h_from_v, batchmean, batchvar
-using RestrictedBoltzmannMachines: free_energy, extensive_sample, initialize!, transfer_mean
+using RestrictedBoltzmannMachines: free_energy, extensive_sample, initialize!, mean_from_inputs
 using AdvRBMs: advpcd!
 
 function train_nepochs(;
@@ -47,7 +47,7 @@ end
     student = RBM(Binary(N), Binary(1), zeros(N,1))
     initialize!(student, data; wts)
     student.w .= cos.(range(-10, 10, length=N))
-    @test transfer_mean(student.visible) ≈ wmean(data; wts, dims=2)
+    @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)
     advpcd!(student, data; wts, epochs, batchsize, mode=:exact, optim=Flux.AdaBelief())
     @info @test cor(free_energy(teacher, data), free_energy(student, data)) > 0.9999
     @test free_energy(teacher, data) .- mean(free_energy(teacher, data)) ≈ free_energy(student, data) .- mean(free_energy(student, data)) rtol=1e-6
@@ -85,7 +85,7 @@ end
     student = RBM(Binary(N), Binary(1), zeros(N,1))
     initialize!(student, data; wts)
     student.w .= cos.(range(-10, 10, length=N)) / 100
-    @test transfer_mean(student.visible) ≈ wmean(data; wts, dims=2)
+    @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)
     advpcd!(student, data; wts, q, epochs, batchsize, shuffle=false, center=true, mode=:exact, optim=Flux.ADAM())
 
     @info @test abs(dot(q, student.w)) < 1e-10 * norm(student.w) * norm(q)
@@ -127,7 +127,7 @@ end
     student = RBM(Binary(N), Binary(2), zeros(N,2))
     initialize!(student, data; wts)
     student.w .= [cos(i^2 * exp(i + j)) for i = 1:N, j = 1:2] / 10
-    @test transfer_mean(student.visible) ≈ wmean(data; wts, dims=2)
+    @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)
     ℋ = CartesianIndices((2:2,))
     advpcd!(student, data; wts, q, ℋ, epochs, batchsize, center=true, shuffle=false, mode=:exact, optim=Flux.ADAM())
 
@@ -168,7 +168,7 @@ end
     student = RBM(Binary(N), Gaussian(1), zeros(N,1))
     initialize!(student, data; wts)
     student.w .= cos.(1:N)
-    @test transfer_mean(student.visible) ≈ wmean(data; wts, dims=2)
+    @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)
     advpcd!(student, data; wts, epochs, batchsize, ϵh=1e-2, shuffle=false, mode=:exact, optim=Flux.ADAM())
     @info @test cor(free_energy(teacher, data), free_energy(student, data)) > 0.99
     wts_student = softmax(-free_energy(student, data))

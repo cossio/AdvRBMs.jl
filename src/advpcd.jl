@@ -36,22 +36,26 @@ function advpcd!(
     vm = fantasy_init(rbm; batchsize, mode), # fantasy chains
     shuffle::Bool = true,
 
-    q::Union{AbstractArray, Nothing} = nothing, # 1st-order constraints (should be zero-sum for Potts layers)
-    Q::Union{AbstractArray, Nothing} = nothing, # 2nd-order constraints
-    λq::Real = isnothing(q) ? 0 : Inf, # 1st-order adversarial soft constraint, penalty
+    q::Union{AbstractArray{<:Real}, Nothing, AbstractVector{<:AbstractArray{<:Real}}} = nothing, # 1st-order constraints (should be zero-sum for Potts layers)
+    Q::Union{AbstractArray{<:Real}, Nothing, AbstractVector{<:AbstractArray{<:Real}}} = nothing, # 2nd-order constraints
     λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
 
     # indices of constrained hidden units
-    ℋ::CartesianIndices = CartesianIndices(size(rbm.hidden))
+    ℋ::Union{CartesianIndices, AbstractVector{<:CartesianIndices}} = CartesianIndices(size(rbm.hidden))
+    # for the options q, Q, ℋ, you can pass individual values, or lists of matching values
 )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
     @assert isnothing(wts) || _nobs(data) == _nobs(wts)
     @assert ϵh ≥ 0
-
-    @assert 0 ≤ λq ≤ Inf # set λq = Inf for hard 1st-order constraint
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported
-    @assert isnothing(q) && iszero(λq) || size(q) == (size(rbm.visible)..., size(q)[end])
-    @assert isnothing(Q) && iszero(λQ) || size(Q) == (front(size(q))..., front(size(q))..., size(Q)[end])
+    @assert iszero(λQ) || !isnothing(Q) # if λQ > 0 it must imply some Q was given
+    if q isa AbstractVector || ℋ isa AbstractVector{<:CartesianIndices}
+        @assert q isa AbstractVector && ℋ isa AbstractVector{<:CartesianIndices} && length(q) == length(ℋ)
+        @assert isnothing(Q) || Q isa AbstractVector && length(Q) == length(q)
+    else
+        @assert isnothing(q) || size(q) == (size(rbm.visible)..., size(q)[end])
+        @assert isnothing(Q) && iszero(λQ) || size(Q) == (front(size(q))..., front(size(q))..., size(Q)[end])
+    end
 
     # indices in visible dimensions
     𝒱 = CartesianIndices(size(rbm.visible))
@@ -67,7 +71,7 @@ function advpcd!(
 
     wts_mean = isnothing(wts) ? 1 : mean(wts)
 
-    if λq == Inf # 1st-order constraint is hard
+    if !isnothing(q) # 1st-order constraint is hard
         # impose 1st-order constraint on initial weights
         rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
     end
@@ -93,9 +97,7 @@ function advpcd!(
         if 0 < λQ < Inf
             ∂.w[𝒱, ℋ] .+= λQ .* ∂wQw(rbm.w[𝒱, ℋ], Q)
         end
-        if 0 < λq < Inf
-            ∂.w[𝒱, ℋ] .+= λq .* ∂qw(rbm.w[𝒱, ℋ], q)
-        elseif λq == Inf
+        if !isnothing(q)
             # project the gradient to be orthogonal to q
             ∂.w[𝒱, ℋ] .= kernelproj(∂.w[𝒱, ℋ], q)
         end
@@ -117,7 +119,7 @@ function advpcd!(
         zerosum && zerosum!(rbm)
         rescale && rescale_hidden!(rbm, sqrt.(var_h .+ ϵh))
 
-        if λq == Inf
+        if !isnothing(q)
             #= Since the adaptive gradients update and
             the centering might move the weights towards q,
             we project the weights to be orthogonal to q after

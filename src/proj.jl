@@ -51,6 +51,7 @@ end
 function _∂wQw(w::AbstractMatrix, Q::AbstractMatrix)
     @assert size(w, 1) == size(Q, 1) == size(Q, 2)
     @assert Q ≈ Q'
+    # ∂wQw = 2 * Q * w * w' * Q * w
     Qw = Q * w
     return 2Qw * (w' * Qw)
 end
