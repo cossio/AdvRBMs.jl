@@ -58,7 +58,7 @@ function advpcd!(
 
     # we center units using their average activities
     ave_v = batchmean(rbm.visible, data; wts)
-    ave_h, var_h = meanvar_from_inputs(rbm.hidden, inputs_v_to_h(rbm, data); wts)
+    ave_h, var_h = total_meanvar_from_inputs(rbm.hidden, inputs_h_from_v(rbm, data); wts)
     @assert all(var_h .+ ϵh .> 0)
 
     # gauge constraints
@@ -80,7 +80,7 @@ function advpcd!(
         batch_weight = isnothing(wts) ? 1 : mean(wd) / wts_mean
         ∂ = gradmult(∂, batch_weight)
 
-        ave_h_batch = grad2mean(rbm.hidden, ∂d.hidden)
+        ave_h_batch = grad2ave(rbm.hidden, ∂d.hidden)
         var_h_batch = grad2var(rbm.hidden, ∂d.hidden)
         damp_eff = damp ^ batch_weight
         ave_h .= (1 - damp_eff) * ave_h_batch .+ damp_eff .* ave_h

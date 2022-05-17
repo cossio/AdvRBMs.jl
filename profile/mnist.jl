@@ -1,4 +1,3 @@
-import MKL
 import LinearAlgebra
 import Statistics
 import Random
@@ -53,7 +52,7 @@ RBMs.initialize!(rbm, train_x)
 q = AdvRBMs.calc_q(train_y, train_x)
 Makie.image(q)
 
-inputs_v_to_h(rbm, q)
+inputs_h_from_v(rbm, q)
 
 Profile.init(n = 10^7, delay = 0.01)
 

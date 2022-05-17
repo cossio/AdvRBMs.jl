@@ -1,12 +1,10 @@
-import MKL
 import Flux
-import Random
 using Test: @testset, @test, @inferred
 using Random: bitrand
 using LinearAlgebra: norm, Diagonal, I, dot
 using Statistics: mean, cor
 using LogExpFunctions: softmax
-using RestrictedBoltzmannMachines: RBM, Binary, Gaussian, BinaryRBM, inputs_v_to_h, wmean
+using RestrictedBoltzmannMachines: RBM, Binary, Gaussian, BinaryRBM, inputs_h_from_v, wmean
 using RestrictedBoltzmannMachines: mean_h_from_v, var_h_from_v, batchmean, batchvar
 using RestrictedBoltzmannMachines: free_energy, extensive_sample, initialize!, transfer_mean
 using AdvRBMs: advpcd!
@@ -24,15 +22,15 @@ end
     q = randn(5,2,1)
     data = bitrand(5,2,128)
     advpcd!(rbm, data; q, steps=1, epochs=1, batchsize=32)
-    @test norm(inputs_v_to_h(rbm, q)) < 1e-10
+    @test norm(inputs_h_from_v(rbm, q)) < 1e-10
 
     rbm = BinaryRBM(randn(5,2), randn(3), randn(5,2,3))
     q = randn(5,2,1)
     data = bitrand(5,2,128)
     ℋ = CartesianIndices((2:3,))
     advpcd!(rbm, data; q, ℋ, steps=1, epochs=1, batchsize=32)
-    @test norm(inputs_v_to_h(rbm, q)[ℋ]) < 1e-10
-    @test norm(inputs_v_to_h(rbm, q)[1,:]) > 1e-5
+    @info @test norm(inputs_h_from_v(rbm, q)[ℋ]) < 1e-10
+    @info @test norm(inputs_h_from_v(rbm, q)[1,:]) > 1e-5
 end
 
 @testset "advpcd -- teacher/student, Binary, with weights, exact, no constraint" begin
@@ -66,7 +64,7 @@ end
 
     vh_student = data * Diagonal(wts_student) * mean_h_from_v(student, data)' / sum(wts_student)
     vh_teacher = data * Diagonal(wts) * mean_h_from_v(student, data)' / sum(wts)
-    @test norm(vh_student - vh_teacher) < 1e-10
+    @info @test norm(vh_student - vh_teacher) < 1e-10
 end
 
 @testset "advpcd -- teacher/student, Binary, with weights, exact, with constraint" begin

@@ -1,4 +1,3 @@
-import MKL
 using SafeTestsets: @safetestset
 
 @time @safetestset "proj" begin include("proj.jl") end

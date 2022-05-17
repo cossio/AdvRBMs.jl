@@ -49,7 +49,7 @@ function advpcdsoft!(
 
     # we center units using their average activities
     ave_v = batchmean(rbm.visible, data; wts)
-    ave_h, var_h = meanvar_from_inputs(rbm.hidden, inputs_v_to_h(rbm, data); wts)
+    ave_h, var_h = total_meanvar_from_inputs(rbm.hidden, inputs_h_from_v(rbm, data); wts)
 
     # indices in visible dimensions
     𝒱 = CartesianIndices(size(rbm.visible))
@@ -75,7 +75,7 @@ function advpcdsoft!(
         ∂m = ∂free_energy(rbm, vm)
         ∂ = subtract_gradients(∂d, ∂m)
 
-        λh = grad2mean(rbm.hidden, ∂d.hidden)
+        λh = grad2ave(rbm.hidden, ∂d.hidden)
         νh = grad2var(rbm.hidden, ∂d.hidden)
         ave_h .= (1 - hidden_damp) * λh .+ hidden_damp .* ave_h
         var_h .= (1 - hidden_damp) * νh .+ hidden_damp .* var_h
