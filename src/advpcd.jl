@@ -51,6 +51,10 @@ function advpcd!(
     @assert iszero(λQ) || !isnothing(Q) # if λQ > 0 it must imply some Q was given
     if q isa AbstractVector || ℋ isa AbstractVector{<:CartesianIndices}
         @assert q isa AbstractVector && ℋ isa AbstractVector{<:CartesianIndices} && length(q) == length(ℋ)
+        for i in eachindex(ℋ), j in eachindex(ℋ)
+            i < j || continue
+            @assert isempty(intersect(ℋ[i], ℋ[j]))
+        end
         @assert isnothing(Q) || Q isa AbstractVector && length(Q) == length(q)
     else
         @assert isnothing(q) || size(q) == (size(rbm.visible)..., size(q)[end])
