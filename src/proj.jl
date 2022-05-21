@@ -13,7 +13,9 @@ function kernelproj(w::AbstractArray, q::AbstractArray)
 end
 
 #= The following parenthesization avoids intermediate large matrices. =#
-kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * ((q' * q) \ (q' * w))
+#kernelproj(w::AbstractMatrix, q::AbstractMatrix; p = pinv(q' * q)) = w - q * ((q' * q) \ (q' * w))
+#kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q' \ (q'w)
+kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * (q \ w) # this is faster usually
 
 """
     ∂qw(w, q)
@@ -36,24 +38,24 @@ end
 Derivative of `∑_k ||w' * Q[:,:,k] * w||^2 / 2` with respect to `w`.
 """
 function ∂wQw(w::AbstractArray, Q::AbstractArray)
-    return sum(_∂wQw(w, selectdim(Q, ndims(Q), k)) for k in 1:size(Q)[end])
+    @assert isodd(ndims(Q))
+    𝒱 = (ndims(Q) - 1) ÷ 2
+    @assert size(w)[1:𝒱] == size(Q)[1:𝒱] == size(Q)[(𝒱 + 1):(2𝒱)]
+    N = prod(size(w, d) for d in 1:𝒱)
+    ∂ = _∂wQw(reshape(w, N, :), reshape(Q, N, N, :))
+    return reshape(∂, size(w))
 end
 
-function _∂wQw(w::AbstractArray, Q::AbstractArray)
-    @assert iseven(ndims(Q))
-    𝒱 = ndims(Q) ÷ 2
-    @assert size(w)[1:𝒱] == size(Q)[1:𝒱] == size(Q)[(𝒱 + 1):end]
-    N = prod(size(Q)[1:𝒱])
-    ∂ = _∂wQw(reshape(w, N, :), reshape(Q, N, N))
-    return reshape(∂, size(w))
+function _∂wQw(w::AbstractMatrix, Q::AbstractArray{<:Any,3})
+    @assert size(w, 1) == size(Q, 1) == size(Q, 2)
+    return sum(_∂wQw(w, Q[:,:,k]) for k in 1:size(Q,3))
 end
 
 function _∂wQw(w::AbstractMatrix, Q::AbstractMatrix)
     @assert size(w, 1) == size(Q, 1) == size(Q, 2)
     @assert Q ≈ Q'
-    # ∂wQw = 2 * Q * w * w' * Q * w
     Qw = Q * w
-    return 2Qw * (w' * Qw)
+    return 2Qw * (w' * Qw) # ∂wQw = 2 * Q * w * w' * Q * w
 end
 
 #= *********************

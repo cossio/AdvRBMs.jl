@@ -2,9 +2,10 @@ module AdvRBMs
 
 import RestrictedBoltzmannMachines as RBMs
 using Base: front
-using LinearAlgebra: sylvester, dot, Diagonal, eigen
+using LinearAlgebra: sylvester, dot, Diagonal, eigen, pinv
 using Statistics: mean
 using ValueHistories: MVHistory
+using FillArrays: Zeros
 using RestrictedBoltzmannMachines: RBM, inputs_h_from_v, sample_v_from_v,
     ∂free_energy, subtract_gradients, ∂regularize!, batchmean, total_meanvar_from_inputs,
     _nobs, default_optimizer, fantasy_init, suffstats, minibatches,
@@ -15,5 +16,6 @@ using RestrictedBoltzmannMachines: RBM, inputs_h_from_v, sample_v_from_v,
 include("calc_qQ.jl")
 include("proj.jl")
 include("advpcd.jl")
+include("util.jl")
 
 end # module

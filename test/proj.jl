@@ -14,6 +14,9 @@ using AdvRBMs: kernelproj, ∂qw, ∂wQw, sylvester_projection
     q = randn(28,28,2)
     wp = @inferred kernelproj(w, q)
     @test norm(sum(reshape(q, 28, 28, 1, 2) .* wp, dims=(1,2))) < 1e-9 * norm(sum(reshape(q, 28, 28, 1, 2) .* w, dims=(1,2)))
+
+    q = zeros(28,28,2)
+    @test @inferred(kernelproj(w, q)) ≈ w
 end
 
 @testset "∂qw" begin
