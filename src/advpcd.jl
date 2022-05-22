@@ -88,7 +88,7 @@ function advpcd!(
         @assert all(var_h .+ ϵh .> 0)
 
         # regularize
-        ∂regularize!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
+        ∂regularize!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights, zerosum)
 
         if 0 < λQ < Inf
             for (Q, ℋ) in zip(Qs, ℋs)
