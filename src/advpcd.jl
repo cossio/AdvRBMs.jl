@@ -27,7 +27,7 @@ function advpcd!(
     center::Bool = true, # center gradients
 
     # damping for hidden activity statistics tracking
-    damp::Real = 1 // 100,
+    ρh::Real = 99//100,
     ϵh = 1e-2, # prevent vanishing var(h)
 
     callback = nothing, # called for every batch
@@ -82,9 +82,9 @@ function advpcd!(
 
         ave_h_batch = grad2ave(rbm.hidden, ∂d.hidden)
         var_h_batch = grad2var(rbm.hidden, ∂d.hidden)
-        damp_eff = damp ^ batch_weight
-        ave_h .= (1 - damp_eff) * ave_h_batch .+ damp_eff .* ave_h
-        var_h .= (1 - damp_eff) * var_h_batch .+ damp_eff .* var_h
+        ρh_eff = ρh ^ batch_weight
+        ave_h .= ρh_eff * ave_h .+ (1 - ρh_eff) * ave_h_batch
+        var_h .= ρh_eff * var_h .+ (1 - ρh_eff) * var_h_batch
         @assert all(var_h .+ ϵh .> 0)
 
         # regularize
