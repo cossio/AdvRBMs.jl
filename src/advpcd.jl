@@ -126,7 +126,7 @@ function advpcd!(
             rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q) # 1st-order constraint is hard
         end
 
-        isnothing(callback) || callback(; rbm, ∂, optim, epoch, batch_idx, vd, wd)
+        isnothing(callback) || callback(; rbm, ∂, optim, epoch, batch_idx, vm, vd, wd)
     end
     return rbm
 end
