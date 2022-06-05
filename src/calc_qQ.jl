@@ -79,9 +79,10 @@ end
 # for categorical labels
 function calc_Q(u::AbstractMatrix{Bool}, v::AbstractArray; wts::Wts = nothing)
     @assert size(u, 2) == size(v)[end]
-    Q = zeros(front(size(v))..., front(size(v))..., size(u, 1))
-    for k in 1:size(u, 1)
-        selectdim(Q, ndims(Q), k) .= calc_Q(u[k,:], v; wts)
+    # we can drop a row because it is a linear combination of the others
+    Q = zeros(front(size(v))..., front(size(v))..., size(u, 1) - 1)
+    for k in 2:size(u, 1)
+        selectdim(Q, ndims(Q), k - 1) .= calc_Q(u[k,:], v; wts)
     end
     return Q
 end

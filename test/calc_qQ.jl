@@ -28,18 +28,16 @@ end
     v = randn(5, 3, 10)
     q = @inferred calc_q(u, v)
     Q = @inferred calc_Q(u, v)
-    @test q[:,:,1] ≈ calc_q(u[2,:], v)
     @test size(q) == (5,3,1)
-    @test size(Q) == (5,3,5,3,2)
-    @test selectdim(Q, ndims(Q), 1) ≈ -selectdim(Q, ndims(Q), 2)
-    Q_flat = reshape(Q, 5 * 3, 5 * 3, 2)
+    @test size(Q) == (5,3,5,3,1)
+    @test q[:,:,1] ≈ calc_q(u[2,:], v)
+    @test Q[:,:,:,:,1] ≈ calc_Q(u[2,:], v)
+    Q_flat = reshape(Q, 5 * 3, 5 * 3, 1)
     @test Q_flat[:,:,1] ≈ Q_flat[:,:,1]'
-    @test Q_flat[:,:,2] ≈ Q_flat[:,:,2]'
 
     qs = @inferred calc_qs(u, v)
     Qs = @inferred calc_Qs(u, v)
 
     @test only(qs) ≈ q
-    @test Qs[1] ≈ Q[:,:,:,:,1]
-    @test Qs[2] ≈ Q[:,:,:,:,2]
+    @test only(Qs) ≈ Q
 end
