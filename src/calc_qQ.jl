@@ -89,12 +89,12 @@ end
 
 function calc_q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T<:Number}
     q = calc_q(u, v; wts)
-    return T.(q)
+    return Array{T}(q)
 end
 
 function calc_Q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T<:Number}
     Q = calc_Q(u, v; wts)
-    return T.(Q)
+    return Array{T}(Q)
 end
 
 # concatenate across last dimension
