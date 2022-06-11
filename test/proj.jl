@@ -17,6 +17,11 @@ using AdvRBMs: kernelproj, ∂qw, ∂wQw, sylvester_projection
 
     q = zeros(28,28,2)
     @test @inferred(kernelproj(w, q)) ≈ w
+
+    w = randn(100, 20)
+    q = randn(100, 1)
+    wp = @inferred kernelproj(w, q)
+    @test wp ≈ w - q * q'w ./ (q'q)
 end
 
 @testset "∂qw" begin
