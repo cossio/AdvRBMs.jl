@@ -40,14 +40,14 @@ end
     N = 5
     batchsize = 2^N
     nupdates = 10000
-    teacher = RBM(Binary(N), Binary(1), zeros(N,1))
+    teacher = RBM(Binary((N,)), Binary((1,)), zeros(N,1))
     teacher.w[:,1] .= range(-2, 2, length=N)
     data = extensive_sample(teacher.visible)
     wts = softmax(-free_energy(teacher, data))
     @test sum(wts) ≈ 1
     nsamples = size(data)[end]
     epochs = train_nepochs(; nsamples, batchsize, nupdates)
-    student = RBM(Binary(N), Binary(1), zeros(N,1))
+    student = RBM(Binary((N,)), Binary((1,)), zeros(N,1))
     initialize!(student, data; wts)
     student.w .= cos.(range(-10, 10, length=N))
     @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)
@@ -76,7 +76,7 @@ end
     M = 20
     batchsize = 2^N
     nupdates = 50000
-    teacher = RBM(Binary(N), Binary(M), randn(N,M))
+    teacher = RBM(Binary((N,)), Binary((M,)), randn(N,M))
     teacher.w .= [sin(i^2 * exp(j)) for i = 1:N, j = 1:M]
     data = extensive_sample(teacher.visible)
     wts = softmax(-free_energy(teacher, data))
@@ -86,7 +86,7 @@ end
     q = [1; zeros(N - 1);;]
     @test norm(q) ≈ 1
     Prj = I - vec(q) * vec(q)'
-    student = RBM(Binary(N), Binary(1), zeros(N,1))
+    student = RBM(Binary((N,)), Binary((1,)), zeros(N,1))
     initialize!(student, data; wts)
     student.w .= cos.(range(-10, 10, length=N)) / 100
     @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)
@@ -119,7 +119,7 @@ end
     M = 5
     batchsize = 2^N
     nupdates = 50000
-    teacher = RBM(Binary(N), Binary(M), zeros(N,M))
+    teacher = RBM(Binary((N,)), Binary((M,)), zeros(N,M))
     teacher.w .= [sin(i^2 * exp(j)) for i = 1:N, j = 1:M]
     data = extensive_sample(teacher.visible)
     wts = softmax(-free_energy(teacher, data))
@@ -129,7 +129,7 @@ end
     q = [1; zeros(N - 1);;]
     @test norm(q) ≈ 1
     Prj = I - vec(q) * vec(q)'
-    student = RBM(Binary(N), Binary(2), zeros(N,2))
+    student = RBM(Binary((N,)), Binary((2,)), zeros(N,2))
     initialize!(student, data; wts)
     student.w .= [cos(i^2 * exp(i + j)) for i = 1:N, j = 1:2] / 10
     @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)
@@ -163,14 +163,14 @@ end
     N = 5
     batchsize = 2^N
     nupdates = 10000
-    teacher = RBM(Binary(N), Gaussian(1), zeros(N,1))
+    teacher = RBM(Binary((N,)), Gaussian((1,)), zeros(N,1))
     teacher.w[:,1] .= range(-1, 1, length=N)
     data = extensive_sample(teacher.visible)
     wts = softmax(-free_energy(teacher, data))
     @test sum(wts) ≈ 1
     nsamples = size(data)[end]
     epochs = train_nepochs(; nsamples, batchsize, nupdates)
-    student = RBM(Binary(N), Gaussian(1), zeros(N,1))
+    student = RBM(Binary((N,)), Gaussian(1), zeros(N,1))
     initialize!(student, data; wts)
     student.w .= cos.(1:N)
     @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)

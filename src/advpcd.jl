@@ -13,7 +13,7 @@ function advpcd!(
     wts::Union{AbstractVector, Nothing} = nothing,
     steps::Int = 1, # fantasy chains MC steps
     optim = default_optimizer(_nobs(data), batchsize, epochs),
-    stats = suffstats(rbm, data; wts), # visible layer sufficient statistics
+    moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
 
     # regularization
     l2_fields::Real = 0, # visible fields L2 regularization
@@ -33,7 +33,7 @@ function advpcd!(
     callback = nothing, # called for every batch
     mode::Symbol = :pcd, # :pcd, :cd, or :exact
 
-    vm = fantasy_init(rbm; batchsize, mode), # fantasy chains
+    vm = fantasy_init(rbm.visible; batchsize, mode), # fantasy chains
     shuffle::Bool = true,
 
     # constraints are given as a list, where each entry describes the constraints applied
@@ -73,12 +73,12 @@ function advpcd!(
     end
 
     for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize, shuffle))
-        ∂d = ∂free_energy(rbm, vd; wts = wd, stats)
+        ∂d = ∂free_energy(rbm, vd; wts = wd, moments)
         ∂m = ∂logpartition(rbm; vd, vm, wd, mode, steps)
         ∂ = subtract_gradients(∂d, ∂m)
 
         batch_weight = isnothing(wts) ? 1 : mean(wd) / wts_mean
-        ∂ = gradmult(∂, batch_weight)
+        ∂ *= batch_weight
 
         ave_h_batch = grad2ave(rbm.hidden, ∂d.hidden)
         var_h_batch = grad2var(rbm.hidden, ∂d.hidden)

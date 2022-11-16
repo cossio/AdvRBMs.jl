@@ -73,7 +73,7 @@ function advpcdsoft!(
         vm .= sample_v_from_v(rbm, vm; steps)
         ∂d = ∂free_energy(rbm, vd; wts = wd, stats)
         ∂m = ∂free_energy(rbm, vm)
-        ∂ = subtract_gradients(∂d, ∂m)
+        ∂ = ∂d - ∂m
 
         λh = grad2mean(rbm.hidden, ∂d.hidden)
         νh = grad2var(rbm.hidden, ∂d.hidden)
