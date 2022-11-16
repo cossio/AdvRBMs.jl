@@ -75,8 +75,8 @@ function advpcdsoft!(
         ∂m = ∂free_energy(rbm, vm)
         ∂ = ∂d - ∂m
 
-        λh = grad2mean(rbm.hidden, ∂d.hidden)
-        νh = grad2var(rbm.hidden, ∂d.hidden)
+        λh = grad2ave(rbm.hidden, -∂d.hidden)
+        νh = grad2var(rbm.hidden, -∂d.hidden)
         ave_h .= (1 - hidden_damp) * λh .+ hidden_damp .* ave_h
         var_h .= (1 - hidden_damp) * νh .+ hidden_damp .* var_h
 

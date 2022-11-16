@@ -170,7 +170,7 @@ end
     @test sum(wts) ≈ 1
     nsamples = size(data)[end]
     epochs = train_nepochs(; nsamples, batchsize, nupdates)
-    student = RBM(Binary((N,)), Gaussian(1), zeros(N,1))
+    student = RBM(Binary((N,)), Gaussian((1,)), zeros(N,1))
     initialize!(student, data; wts)
     student.w .= cos.(1:N)
     @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)

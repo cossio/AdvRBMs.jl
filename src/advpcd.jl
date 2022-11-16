@@ -75,13 +75,13 @@ function advpcd!(
     for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize, shuffle))
         ∂d = ∂free_energy(rbm, vd; wts = wd, moments)
         ∂m = ∂logpartition(rbm; vd, vm, wd, mode, steps)
-        ∂ = subtract_gradients(∂d, ∂m)
+        ∂ = ∂d - ∂m
 
         batch_weight = isnothing(wts) ? 1 : mean(wd) / wts_mean
         ∂ *= batch_weight
 
-        ave_h_batch = grad2ave(rbm.hidden, ∂d.hidden)
-        var_h_batch = grad2var(rbm.hidden, ∂d.hidden)
+        ave_h_batch = grad2ave(rbm.hidden, -∂d.hidden)
+        var_h_batch = grad2var(rbm.hidden, -∂d.hidden)
         ρh_eff = ρh ^ batch_weight
         ave_h .= ρh_eff * ave_h .+ (1 - ρh_eff) * ave_h_batch
         var_h .= ρh_eff * var_h .+ (1 - ρh_eff) * var_h_batch
