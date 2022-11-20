@@ -33,3 +33,7 @@ docs/src/literate/*.md
 
 # profiling
 *.pb.gz
+
+
+.ipynb_checkpoints
+.CondaPkg

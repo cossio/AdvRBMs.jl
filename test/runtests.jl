@@ -1,5 +1,3 @@
-using SafeTestsets: @safetestset
-
-@time @safetestset "proj" begin include("proj.jl") end
-@time @safetestset "calc_qQ" begin include("calc_qQ.jl") end
-@time @safetestset "advpcd" begin include("advpcd.jl") end
+module proj_tests include("proj.jl") end
+module calc_qQ_tests include("calc_qQ.jl") end
+module advpcd_tests include("advpcd.jl") end

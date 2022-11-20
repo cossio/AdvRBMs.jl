@@ -23,3 +23,7 @@ This package does not export any symbols.
 This package builds on top of <https://github.com/cossio/RestrictedBoltzmannMachines.jl> which implements standard Restricted Boltzmann Machines in Julia.
 
 Also: https://github.com/cossio/AdvRBMs_App.jl.git
+
+# Paper
+
+This repository hosts code accompanying the paper. https://arxiv.org/abs/2206.11600.
