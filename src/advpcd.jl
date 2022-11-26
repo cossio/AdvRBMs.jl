@@ -65,8 +65,9 @@ function advpcd!(
     wts_mean = isnothing(wts) ? 1 : mean(wts)
 
     # impose hard 1st-order constraint on initial weights
-    for (q, ℋ) in zip(qs, ℋs)
-        rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
+    qs_inv = map(pseudo_inv_of_q, qs)
+    for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
+        rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
     end
 
     # define parameters for Optimiser and initialize optimiser state
@@ -75,7 +76,7 @@ function advpcd!(
 
     for (iter, (vd, wd)) in zip(1:iters, infinite_minibatches(data, wts; batchsize, shuffle))
         # update Markov chains
-        vm .= sample_v_from_v(rbm, vm; steps)
+        vm = sample_v_from_v(rbm, vm; steps)
 
         # gradient
         ∂d = ∂free_energy(rbm, vd; wts = wd, moments)
@@ -109,10 +110,11 @@ function advpcd!(
 
         # respect gauge constraints
         zerosum && zerosum!(rbm)
+        rescale && rescale_weights!(rbm)
 
         # 1st-order constraint is hard, project weights
-        for (q, ℋ) in zip(qs, ℋs)
-            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
+        for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
+            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
         end
 
         callback(; rbm, ∂, optim, iter, vm, vd, wd)

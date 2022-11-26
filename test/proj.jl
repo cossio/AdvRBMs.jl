@@ -1,7 +1,12 @@
 using Test: @test, @testset, @inferred
 using Zygote: gradient
-using LinearAlgebra: norm, dot
-using AdvRBMs: kernelproj, ∂qw, ∂wQw, sylvester_projection
+using LinearAlgebra: norm, dot, pinv
+using AdvRBMs: kernelproj, ∂qw, ∂wQw, sylvester_projection, pseudo_inv_of_q
+
+@testset "pseudo_inv_of_q" begin
+    q = randn(28, 64, 5)
+    @test pseudo_inv_of_q(q) ≈ reshape(pinv(reshape(q, 28 * 64, 5)), 5, 64, 28)
+end
 
 @testset "kernelproj" begin
     w = randn(28,7)

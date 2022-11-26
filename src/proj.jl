@@ -4,19 +4,25 @@
 Projects `w` to the kernel of `q`. That is, the result satisfies
 q' * kernelproj(w, q) ≈ 0, up to numerical error.
 """
-function kernelproj(w::AbstractArray, q::AbstractArray)
+function kernelproj(w::AbstractArray, q::AbstractArray; qinv::AbstractArray = pseudo_inv_of_q(q))
     K = ndims(q) - 1
     @assert size(w)[1:K] == size(q)[1:K]
     N = prod(size(w, d) for d in 1:K)
-    w_proj = kernelproj(reshape(w, N, :), reshape(q, N, :))
+    w_proj = kernelproj(reshape(w, N, :), reshape(q, N, :); qinv=reshape(qinv, :, N))
     return reshape(w_proj, size(w))
 end
 
 #= The following parenthesization avoids intermediate large matrices. =#
-#kernelproj(w::AbstractMatrix, q::AbstractMatrix; p = pinv(q' * q)) = w - q * ((q' * q) \ (q' * w))
-kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * ((q' * q) \ (q' * w)) # CUDA-friendly
+#kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * ((q' * q) \ (q' * w))
 #kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q' \ (q'w)
 #kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * (q \ w) # this is faster usually, but doesn't work with CUDA yet: https://github.com/JuliaGPU/CUDA.jl/issues/104
+kernelproj(w::AbstractMatrix, q::AbstractMatrix; qinv::AbstractMatrix = pinv(q)) = w - q * (qinv * w)  # CUDA-friendly
+
+function pseudo_inv_of_q(q::AbstractArray)
+    q_flat = reshape(q, :, last(size(q)))
+    q_inv = pinv(q_flat)
+    return reshape(q_inv, reverse(size(q)))
+end
 
 """
     ∂qw(w, q)
