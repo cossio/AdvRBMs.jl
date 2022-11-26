@@ -1,12 +1,5 @@
-"""
-    advpcd!(rbm, data; q, Q, ...)
-
-Trains the RBM on data using Persistent Contrastive divergence with constraints.
-Matrix `q` contains the 1st-order constraints, that `q[...,t]' * W` be small, for each `t`.
-Matrix `Q` contains the 2nd-order constraints, that `W' * Q[...,t] * W` be small, for each `t`.
-"""
 function advpcd!(
-    rbm::Union{RBM, CenteredRBM},
+    rbm::CenteredRBM,
     data::AbstractArray;
     batchsize::Int = 1,
     iters::Int = 1, # number of parameter updates
@@ -23,15 +16,11 @@ function advpcd!(
 
     # gauge
     zerosum::Bool = true, # zerosum gauge for Potts layers
-    rescale::Bool = true, # normalize weights to unit norm
 
     callback = Returns(nothing), # called for every batch
 
     vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
     shuffle::Bool = true,
-
-    # damping to update hidden statistics for centering
-    hidden_offset_damping::Real = 1//100,
 
     # constraints are given as a list, where each entry describes the constraints applied
     # to a group of hidden units (the groups must be exclusive)
@@ -44,7 +33,6 @@ function advpcd!(
 )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
     isnothing(wts) || @assert size(data)[end] == length(wts)
-    @assert 0 ≤ hidden_offset_damping ≤ 1
 
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported
     @assert length(qs) == length(Qs) == length(ℋs)
@@ -55,12 +43,6 @@ function advpcd!(
 
     # gauge constraints
     zerosum && zerosum!(rbm)
-    rescale && rescale_weights!(rbm)
-
-    # inital centering from data
-    if rbm isa CenteredRBM
-        center_from_data!(rbm, data)
-    end
 
     wts_mean = isnothing(wts) ? 1 : mean(wts)
 
@@ -82,7 +64,6 @@ function advpcd!(
         ∂m = ∂free_energy(rbm, vm)
         ∂ = ∂d - ∂m
 
-        # correct weighted minibatch bias
         batch_weight = isnothing(wts) ? 1 : mean(wd) / wts_mean
         ∂ *= batch_weight
 
@@ -99,13 +80,6 @@ function advpcd!(
         # feed gradient to Optimiser rule and update parameters
         gs = (; visible = ∂.visible, hidden = ∂.hidden, w = ∂.w)
         state, ps = update!(state, ps, gs)
-
-        # centering
-        if rbm isa CenteredRBM
-            offset_h_new = grad2ave(rbm.hidden, -∂d.hidden) # <h>_d from minibatch
-            offset_h = (1 - hidden_offset_damping) * rbm.offset_h + hidden_offset_damping * offset_h_new
-            center_hidden!(rbm, offset_h)
-        end
 
         # respect gauge constraints
         zerosum && zerosum!(rbm)
