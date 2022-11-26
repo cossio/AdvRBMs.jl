@@ -48,7 +48,7 @@ function advpcd!(
     ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
 )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
-    @assert isnothing(wts) || _nobs(data) == _nobs(wts)
+    isnothing(wts) || @assert size(data)[end] == length(wts)
     @assert ϵh ≥ 0
 
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported

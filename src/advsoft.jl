@@ -12,9 +12,9 @@ function advpcdsoft!(
     epochs::Int = 1,
     wts = nothing,
     steps::Int = 1, # fantasy chains MC steps
-    optim = default_optimizer(_nobs(data), batchsize, epochs),
+    optim = Adam(),
     vm::AbstractArray = fantasy_init(rbm, batchsize), # fantasy chains
-    stats = suffstats(rbm, data; wts), # visible layer sufficient statistics
+    moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
 
     # regularization
     l2_fields::Real = 0, # visible fields L2 regularization
@@ -30,7 +30,7 @@ function advpcdsoft!(
     standardize_hidden::Bool = true,
 
     # damping for hidden activity statistics tracking
-    hidden_damp::Real = batchsize / _nobs(data),
+    hidden_damp::Real = batchsize / size(data)[end],
     ϵh = 1e-2, # prevent vanishing var(h)
 
     callback = nothing, # called for every batch
@@ -45,7 +45,7 @@ function advpcdsoft!(
     ℋ2::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))]
 )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
-    @assert isnothing(wts) || _nobs(data) == _nobs(wts)
+    @assert isnothing(wts) || size(data)[end] == length(wts)
 
     # we center units using their average activities
     ave_v = batchmean(rbm.visible, data; wts)
@@ -71,7 +71,7 @@ function advpcdsoft!(
 
     for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize))
         vm .= sample_v_from_v(rbm, vm; steps)
-        ∂d = ∂free_energy(rbm, vd; wts = wd, stats)
+        ∂d = ∂free_energy(rbm, vd; wts = wd, moments)
         ∂m = ∂free_energy(rbm, vm)
         ∂ = ∂d - ∂m
 
