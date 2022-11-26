@@ -9,7 +9,7 @@ function advpcd!(
     rbm::RBM,
     data::AbstractArray;
     batchsize::Int = 1,
-    epochs::Int = 1,
+    iters::Int = 1, # number of parameter updates
     wts::Union{AbstractVector, Nothing} = nothing,
     steps::Int = 1, # fantasy chains MC steps
     optim = Adam(),
@@ -23,19 +23,10 @@ function advpcd!(
 
     # gauge
     zerosum::Bool = true, # zerosum gauge for Potts layers
-    rescale::Bool = true, # scale hidden unit activations to var(h) = 1
-    center::Bool = true, # center gradients
-
-    # damping for hidden activity statistics tracking
-    ρh::Real = 99//100,
-    ϵh = 1e-2, # prevent vanishing var(h)
 
     callback = Returns(nothing), # called for every batch
-    mode::Symbol = :pcd, # :pcd, :cd, or :exact
 
-    vm = fantasy_init(rbm.visible; batchsize, mode), # fantasy chains
-    #vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
-
+    vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
     shuffle::Bool = true,
 
     # constraints are given as a list, where each entry describes the constraints applied
@@ -49,7 +40,6 @@ function advpcd!(
 )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
     isnothing(wts) || @assert size(data)[end] == length(wts)
-    @assert ϵh ≥ 0
 
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported
     @assert length(qs) == length(Qs) == length(ℋs)
@@ -58,77 +48,55 @@ function advpcd!(
     # indices in visible dimensions
     𝒱 = CartesianIndices(size(rbm.visible))
 
-    # we center units using their average activities
-    ave_v = batchmean(rbm.visible, data; wts)
-    ave_h, var_h = total_meanvar_from_inputs(rbm.hidden, inputs_h_from_v(rbm, data); wts)
-    @assert all(var_h .+ ϵh .> 0)
-
     # gauge constraints
     zerosum && zerosum!(rbm)
-    rescale && rescale_hidden!(rbm, sqrt.(var_h .+ ϵh))
 
     wts_mean = isnothing(wts) ? 1 : mean(wts)
 
-    # impose 1st-order constraint on initial weights
+    # impose hard 1st-order constraint on initial weights
     for (q, ℋ) in zip(qs, ℋs)
-        rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q) # 1st-order constraint is hard
+        rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
     end
 
-    for epoch in 1:epochs, (batch_idx, (vd, wd)) in enumerate(minibatches(data, wts; batchsize, shuffle))
+    # define parameters for Optimiser and initialize optimiser state
+    ps = (; visible = rbm.visible.par, hidden = rbm.hidden.par, w = rbm.w)
+    state = setup(optim, ps)
+
+    for (iter, (vd, wd)) in zip(1:iters, infinite_minibatches(data, wts; batchsize, shuffle))
+        # update Markov chains
+        vm .= sample_v_from_v(rbm, vm; steps)
+
+        # gradient
         ∂d = ∂free_energy(rbm, vd; wts = wd, moments)
-        ∂m = ∂logpartition(rbm; vd, vm, wd, mode, steps)
+        ∂m = ∂free_energy(rbm, vm)
         ∂ = ∂d - ∂m
 
         batch_weight = isnothing(wts) ? 1 : mean(wd) / wts_mean
         ∂ *= batch_weight
 
-        ave_h_batch = grad2ave(rbm.hidden, -∂d.hidden)
-        var_h_batch = grad2var(rbm.hidden, -∂d.hidden)
-        ρh_eff = ρh ^ batch_weight
-        ave_h .= ρh_eff * ave_h .+ (1 - ρh_eff) * ave_h_batch
-        var_h .= ρh_eff * var_h .+ (1 - ρh_eff) * var_h_batch
-        @assert all(var_h .+ ϵh .> 0)
-
         # regularize
         ∂regularize!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights, zerosum)
 
+        # 2nd order constraint is soft, update gradient accordingly
         if 0 < λQ < Inf
             for (Q, ℋ) in zip(Qs, ℋs)
                 ∂.w[𝒱, ℋ] .+= λQ .* ∂wQw(rbm.w[𝒱, ℋ], Q)
             end
         end
 
-        if center
-            ∂ = center_gradient(rbm, ∂, ave_v, ave_h)
-        end
-
-        for (q, ℋ) in zip(qs, ℋs)
-            # 1st-order constraint is hard
-            ∂.w[𝒱, ℋ] .= kernelproj(∂.w[𝒱, ℋ], q)
-        end
-
-        # compute parameter update step, according to optimizer algorithm
-        update!(∂, rbm, optim)
-
-        if center # get step in uncentered parameters
-            ∂ = uncenter_step(rbm, ∂, ave_v, ave_h)
-        end
-
-        RBMs.update!(rbm, ∂)
+        # feed gradient to Optimiser rule and update parameters
+        gs = (; visible = ∂.visible, hidden = ∂.hidden, w = ∂.w)
+        state, ps = update!(state, ps, gs)
 
         # respect gauge constraints
         zerosum && zerosum!(rbm)
-        rescale && rescale_hidden!(rbm, sqrt.(var_h .+ ϵh))
 
+        # 1st-order constraint is hard, project weights
         for (q, ℋ) in zip(qs, ℋs)
-            #= Since the adaptive gradients update and
-            the centering might move the weights towards q,
-            we project the weights to be orthogonal to q after
-            each update. =#
-            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q) # 1st-order constraint is hard
+            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q)
         end
 
-        callback(; rbm, ∂, optim, epoch, batch_idx, vm, vd, wd)
+        callback(; rbm, ∂, optim, iter, vm, vd, wd)
     end
     return rbm
 end
@@ -144,50 +112,4 @@ end
 
 function default_ℋs(rbm::RBM, qs::AbstractVector{<:AbstractArray{<:Real}})
     return [CartesianIndices(size(rbm.hidden)) for q in qs]
-end
-
-# init fantasy chains
-function fantasy_init(layer::AbstractLayer; batchsize::Int, mode::Symbol = :pcd)
-    @assert mode ∈ (:pcd, :cd, :exact)
-    if mode === :exact
-        @warn "Running extensive sampling; this can take a lot of RAM and time"
-        return extensive_sample(layer)
-    else
-        return sample_from_inputs(layer, falses(size(layer)..., batchsize))
-    end
-end
-
-function extensive_sample(layer::Binary; maxlen::Int = 12)
-    @assert length(layer) ≤ maxlen
-    N = length(layer)
-    v = reduce(hcat, BitVector.(digits.(Bool, 0:(2^N - 1), base=2, pad=N)))
-    return reshape(v, size(layer)..., :)
-end
-
-function extensive_sample(layer::Spin; maxlen::Int = 12)
-    σ = extensive_sample(Binary(; layer.θ); maxlen)
-    return Int8(2) * σ .- Int8(1)
-end
-
-function extensive_sample(layer::Potts; maxlen::Int = 12)
-    q = size(layer, 1)
-    N = prod(tail(size(layer)))
-    @assert N * log2(q) ≤ maxlen && q < typemax(Int8)
-    potts = reduce(hcat, digits.(Int8, 0:(q^N - 1), base=q, pad=N))
-    onehot = reshape(potts, 1, :) .== 0:(q - 1)
-    return reshape(onehot, size(layer)..., :)
-end
-
-"""
-    training_epochs(; nsamples, nupdates, batchsize)
-
-Computes the number of epochs needed to achieve the given number of gradient `nupdates`,
-at a given `batchsize`, for a dataset of size `nsamples`.
-"""
-function training_epochs(;
-    nsamples::Int, # number observations in the data
-    nupdates::Int, # desired number of parameter updates
-    batchsize::Int # size of each mini-batch
-)
-    return ceil(Int, nupdates * batchsize / nsamples)
 end

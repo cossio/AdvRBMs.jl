@@ -1,5 +1,5 @@
-import Zygote
 using Test: @test, @testset, @inferred
+using Zygote: gradient
 using LinearAlgebra: norm, dot
 using AdvRBMs: kernelproj, ∂qw, ∂wQw, sylvester_projection
 
@@ -27,7 +27,7 @@ end
 @testset "∂qw" begin
     w = randn(7, 5)
     q = randn(7, 2)
-    ∂, = Zygote.gradient(w) do w
+    ∂, = gradient(w) do w
         norm(q' * w)^2 / 2
     end
     @test ∂ ≈ @inferred ∂qw(w, q)
@@ -40,7 +40,7 @@ end
     for k in 1:2
         Q[:,:,k] = Q[:,:,k] + Q[:,:,k]'
     end
-    ∂, = Zygote.gradient(w) do w
+    ∂, = gradient(w) do w
         sum(norm(w' * Q[:,:,k] * w)^2 / 2 for k in 1:2)
     end
     @test ∂ ≈ @inferred ∂wQw(w, Q)

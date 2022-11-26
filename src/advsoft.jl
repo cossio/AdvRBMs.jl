@@ -1,3 +1,5 @@
+# TODO: Update this file!
+
 """
     advpcdsoft!(rbm, data; q, Q, ...)
 
@@ -13,7 +15,7 @@ function advpcdsoft!(
     wts = nothing,
     steps::Int = 1, # fantasy chains MC steps
     optim = Adam(),
-    vm::AbstractArray = fantasy_init(rbm, batchsize), # fantasy chains
+    vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
     moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
 
     # regularization
@@ -44,6 +46,8 @@ function advpcdsoft!(
     ℋ1::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))],
     ℋ2::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))]
 )
+    error("this is outdated, don't call me ... update!!")
+
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
     @assert isnothing(wts) || size(data)[end] == length(wts)
 
