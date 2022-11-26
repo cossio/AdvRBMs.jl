@@ -8,8 +8,7 @@ Train and sample [Restricted Boltzmann Machines](https://en.wikipedia.org/wiki/R
 
 ## Installation
 
-This package is not registered.
-Install with:
+This package is not registered. Install with:
 
 ```julia
 using Pkg
