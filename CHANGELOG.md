@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. The format 
 ## [v1.0.0]
 
 - Release v1.0.0.
+- Support `CenteredRBM` (from https://github.com/cossio/CenteredRBMs.jl).
 
 ## [v0.4.0]
 
