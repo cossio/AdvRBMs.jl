@@ -14,8 +14,9 @@ end
 
 #= The following parenthesization avoids intermediate large matrices. =#
 #kernelproj(w::AbstractMatrix, q::AbstractMatrix; p = pinv(q' * q)) = w - q * ((q' * q) \ (q' * w))
+kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * ((q' * q) \ (q' * w)) # CUDA-friendly
 #kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q' \ (q'w)
-kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * (q \ w) # this is faster usually
+#kernelproj(w::AbstractMatrix, q::AbstractMatrix) = w - q * (q \ w) # this is faster usually, but doesn't work with CUDA yet: https://github.com/JuliaGPU/CUDA.jl/issues/104
 
 """
     ∂qw(w, q)
