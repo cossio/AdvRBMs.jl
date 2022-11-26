@@ -7,3 +7,7 @@ All notable changes to this project will be documented in this file. The format 
 ## [v1.0.0]
 
 - Release v1.0.0.
+
+## [v0.4.0]
+
+- Support RBMs.jl v1, 2.
