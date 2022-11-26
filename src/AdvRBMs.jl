@@ -7,7 +7,7 @@ using Statistics: mean
 using ValueHistories: MVHistory
 using FillArrays: Zeros, Falses
 using Optimisers: AbstractRule, setup, update!, Adam
-using CenteredRBMs: CenteredRBM, grad2ave, center_hidden!
+using CenteredRBMs: CenteredRBM, grad2ave, center_hidden!, center_from_data!
 using RestrictedBoltzmannMachines: RBM, AbstractLayer, Binary, Spin, Potts,
     inputs_h_from_v, sample_v_from_v,
     ∂free_energy, ∂regularize!, batchmean, total_meanvar_from_inputs,
