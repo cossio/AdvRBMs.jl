@@ -1,14 +1,16 @@
 module AdvRBMs
 
 import RestrictedBoltzmannMachines as RBMs
-using Base: front
+using Base: front, tail
 using LinearAlgebra: sylvester, dot, Diagonal, eigen, pinv
 using Statistics: mean
 using ValueHistories: MVHistory
-using FillArrays: Zeros
-using RestrictedBoltzmannMachines: RBM, inputs_h_from_v, sample_v_from_v,
+using FillArrays: Zeros, Falses
+using Flux: Adam
+using RestrictedBoltzmannMachines: RBM, AbstractLayer, Binary, Spin, Potts,
+    inputs_h_from_v, sample_v_from_v,
     ∂free_energy, ∂regularize!, batchmean, total_meanvar_from_inputs,
-    _nobs, default_optimizer, fantasy_init, moments_from_samples, minibatches,
+    _nobs, default_optimizer, sample_from_inputs, moments_from_samples, minibatches,
     update!, center_gradient, uncenter_step,
     zerosum!, rescale_hidden!, grad2ave, grad2var, wmean,
     ∂logpartition

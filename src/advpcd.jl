@@ -12,7 +12,7 @@ function advpcd!(
     epochs::Int = 1,
     wts::Union{AbstractVector, Nothing} = nothing,
     steps::Int = 1, # fantasy chains MC steps
-    optim = default_optimizer(_nobs(data), batchsize, epochs),
+    optim = Adam(),
     moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
 
     # regularization
@@ -30,10 +30,12 @@ function advpcd!(
     ρh::Real = 99//100,
     ϵh = 1e-2, # prevent vanishing var(h)
 
-    callback = nothing, # called for every batch
+    callback = Returns(nothing), # called for every batch
     mode::Symbol = :pcd, # :pcd, :cd, or :exact
 
     vm = fantasy_init(rbm.visible; batchsize, mode), # fantasy chains
+    #vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
+
     shuffle::Bool = true,
 
     # constraints are given as a list, where each entry describes the constraints applied
@@ -126,7 +128,7 @@ function advpcd!(
             rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q) # 1st-order constraint is hard
         end
 
-        isnothing(callback) || callback(; rbm, ∂, optim, epoch, batch_idx, vm, vd, wd)
+        callback(; rbm, ∂, optim, epoch, batch_idx, vm, vd, wd)
     end
     return rbm
 end
@@ -142,4 +144,50 @@ end
 
 function default_ℋs(rbm::RBM, qs::AbstractVector{<:AbstractArray{<:Real}})
     return [CartesianIndices(size(rbm.hidden)) for q in qs]
+end
+
+# init fantasy chains
+function fantasy_init(layer::AbstractLayer; batchsize::Int, mode::Symbol = :pcd)
+    @assert mode ∈ (:pcd, :cd, :exact)
+    if mode === :exact
+        @warn "Running extensive sampling; this can take a lot of RAM and time"
+        return extensive_sample(layer)
+    else
+        return sample_from_inputs(layer, falses(size(layer)..., batchsize))
+    end
+end
+
+function extensive_sample(layer::Binary; maxlen::Int = 12)
+    @assert length(layer) ≤ maxlen
+    N = length(layer)
+    v = reduce(hcat, BitVector.(digits.(Bool, 0:(2^N - 1), base=2, pad=N)))
+    return reshape(v, size(layer)..., :)
+end
+
+function extensive_sample(layer::Spin; maxlen::Int = 12)
+    σ = extensive_sample(Binary(; layer.θ); maxlen)
+    return Int8(2) * σ .- Int8(1)
+end
+
+function extensive_sample(layer::Potts; maxlen::Int = 12)
+    q = size(layer, 1)
+    N = prod(tail(size(layer)))
+    @assert N * log2(q) ≤ maxlen && q < typemax(Int8)
+    potts = reduce(hcat, digits.(Int8, 0:(q^N - 1), base=q, pad=N))
+    onehot = reshape(potts, 1, :) .== 0:(q - 1)
+    return reshape(onehot, size(layer)..., :)
+end
+
+"""
+    training_epochs(; nsamples, nupdates, batchsize)
+
+Computes the number of epochs needed to achieve the given number of gradient `nupdates`,
+at a given `batchsize`, for a dataset of size `nsamples`.
+"""
+function training_epochs(;
+    nsamples::Int, # number observations in the data
+    nupdates::Int, # desired number of parameter updates
+    batchsize::Int # size of each mini-batch
+)
+    return ceil(Int, nupdates * batchsize / nsamples)
 end

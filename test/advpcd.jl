@@ -5,10 +5,11 @@ using Random: bitrand
 using LinearAlgebra: norm, Diagonal, I, dot
 using Statistics: mean, cor
 using LogExpFunctions: softmax
-using RestrictedBoltzmannMachines: RBM, Binary, Gaussian, BinaryRBM, inputs_h_from_v, wmean
-using RestrictedBoltzmannMachines: mean_h_from_v, var_h_from_v, batchmean, batchvar
-using RestrictedBoltzmannMachines: free_energy, extensive_sample, initialize!, mean_from_inputs
-using AdvRBMs: advpcd!
+using RestrictedBoltzmannMachines: RBM, Binary, Spin, Potts, Gaussian, BinaryRBM,
+    inputs_h_from_v, wmean,
+    mean_h_from_v, var_h_from_v, batchmean, batchvar,
+    free_energy, initialize!, mean_from_inputs
+using AdvRBMs: advpcd!, extensive_sample, training_epochs
 
 Random.seed!(2)
 
@@ -18,6 +19,26 @@ function train_nepochs(;
     batchsize::Int # size of each mini-batch
 )
     return ceil(Int, nupdates * batchsize / nsamples)
+end
+
+@testset "extensive_sample" begin
+    @test extensive_sample(Binary((1,))) == [0 1]
+    @test extensive_sample(Binary((2,))) == reduce(hcat, [σ1,σ2] for σ1 in 0:1, σ2 in 0:1)
+    @test extensive_sample(Spin((1,))) == Int8[-1 1]
+    @test extensive_sample(Spin((2,))) == reduce(hcat, [s1,s2] for s1 in (-1,1), s2 in (-1,1))
+    @test extensive_sample(Potts((2,1))) == reshape([1,0,0,1], 2,1,2)
+    @test all(sum(extensive_sample(Potts((3,4))); dims=1) .== 1)
+end
+
+
+@testset "training_epochs" begin
+    nsamples = 5421
+    nupdates = 10403
+    batchsize = 5
+    nepochs = training_epochs(; nsamples, nupdates, batchsize)
+    minibatch_count = cld(nsamples, batchsize)
+    @test minibatch_count * (nepochs - 1) ≤ nupdates
+    @test minibatch_count * (nepochs + 1) ≥ nupdates
 end
 
 @testset "advpcd" begin
@@ -51,7 +72,7 @@ end
     initialize!(student, data; wts)
     student.w .= cos.(range(-10, 10, length=N))
     @test mean_from_inputs(student.visible) ≈ wmean(data; wts, dims=2)
-    advpcd!(student, data; wts, epochs, batchsize, mode=:exact, optim=Flux.AdaBelief())
+    advpcd!(student, data; wts, epochs, batchsize, mode=:exact, optim=Flux.AdaBelief(), center=false)
     @info @test cor(free_energy(teacher, data), free_energy(student, data)) > 0.9999
     @test free_energy(teacher, data) .- mean(free_energy(teacher, data)) ≈ free_energy(student, data) .- mean(free_energy(student, data)) rtol=1e-6
 
@@ -152,9 +173,9 @@ end
 
     vh_student = data * Diagonal(wts_student) * mean_h_from_v(student, data)' / sum(wts_student)
     vh_teacher = data * Diagonal(wts) * mean_h_from_v(student, data)' / sum(wts)
-    @info @test vh_student[:,1] ≈ vh_teacher[:,1] rtol=1e-5
-    @info @test Prj * vh_student[:,ℋ] ≈ Prj * vh_teacher[:,ℋ] rtol=1e-5
-    @info @test norm(q' * (vh_student - vh_teacher)[:,ℋ]) ≈ norm((vh_student - vh_teacher)[:,ℋ]) rtol=1e-3
+    @info @test vh_student[:,1] ≈ vh_teacher[:,1] rtol=1e-3
+    @info @test Prj * vh_student[:,ℋ] ≈ Prj * vh_teacher[:,ℋ] rtol=1e-3
+    @info @test norm(q' * (vh_student - vh_teacher)[:,ℋ]) ≈ norm((vh_student - vh_teacher)[:,ℋ]) rtol=1e-2
     @test norm(Prj * (vh_student - vh_teacher)[:,ℋ]) < 0.1norm(q' * (vh_student - vh_teacher)[:,ℋ])
 end
 

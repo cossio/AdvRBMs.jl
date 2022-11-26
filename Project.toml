@@ -5,11 +5,12 @@ version = "0.2.0"
 
 [deps]
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 RestrictedBoltzmannMachines = "12e6b396-7db5-4506-8cb6-664a4fe1e50e"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 ValueHistories = "98cad3c8-aec3-5f06-8e41-884608649ab7"
 
 [compat]
-julia = "1.7"
 RestrictedBoltzmannMachines = "0.38"
+julia = "1.8"
