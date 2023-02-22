@@ -3,7 +3,6 @@ import Statistics
 import Random
 import Logging
 import Profile
-import ValueHistories
 import StatsBase
 import Flux
 import ProgressMeter

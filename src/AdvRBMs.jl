@@ -4,7 +4,6 @@ import RestrictedBoltzmannMachines as RBMs
 using Base: front, tail
 using LinearAlgebra: sylvester, dot, Diagonal, eigen, pinv
 using Statistics: mean
-using ValueHistories: MVHistory
 using FillArrays: Zeros, Falses
 using Optimisers: AbstractRule, setup, update!, Adam
 using CenteredRBMs: CenteredRBM, grad2ave, center_hidden!, center_from_data!
