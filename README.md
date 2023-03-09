@@ -25,4 +25,4 @@ Implementation of standard Restricted Boltzmann Machines in Julia: <https://gith
 
 This repository hosts code accompanying the paper: https://arxiv.org/abs/2206.11600. If you use this code in a publication, please cite:
 
-* Jorge Fernandez-de-Cossio-Diaz, Simona Cocco, and Remi Monasson. "Disentangling representations in Restricted Boltzmann Machines without adversaries." arXiv preprint arXiv:2206.11600 (2022). Accepted for publication in Physical Review X.
+* Jorge Fernandez-de-Cossio-Diaz, Simona Cocco, and Remi Monasson. "Disentangling representations in Restricted Boltzmann Machines without adversaries." arXiv:2206.11600 (2022). Accepted for publication in Physical Review X.
