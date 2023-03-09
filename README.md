@@ -19,12 +19,10 @@ This package does not export any symbols.
 
 ## Related packages
 
-This package builds on top of <https://github.com/cossio/RestrictedBoltzmannMachines.jl> which implements standard Restricted Boltzmann Machines in Julia.
+Implementation of standard Restricted Boltzmann Machines in Julia: <https://github.com/cossio/RestrictedBoltzmannMachines.jl>.
 
-Also: https://github.com/cossio/AdvRBMs_App.jl.git
-
-# Paper
+# Citation
 
 This repository hosts code accompanying the paper: https://arxiv.org/abs/2206.11600. If you use this code in a publication, please cite:
 
-* Fernandez-de-Cossio-Diaz, Jorge, Simona Cocco, and Remi Monasson. "Disentangling representations in Restricted Boltzmann Machines without adversaries." arXiv preprint arXiv:2206.11600 (2022)
+* Jorge Fernandez-de-Cossio-Diaz, Simona Cocco, and Remi Monasson. "Disentangling representations in Restricted Boltzmann Machines without adversaries." arXiv preprint arXiv:2206.11600 (2022)
