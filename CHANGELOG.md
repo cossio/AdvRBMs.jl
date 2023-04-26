@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## [v1.0.1]
+
+- Some compat updates.
+
 ## [v1.0.0]
 
 - Release v1.0.0.
