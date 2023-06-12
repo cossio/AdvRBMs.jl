@@ -57,7 +57,7 @@ function advpcd!(
     zerosum && zerosum!(rbm)
     rescale && rescale_weights!(rbm)
 
-    # inital centering from data
+    # initial centering from data
     if rbm isa CenteredRBM
         center_from_data!(rbm, data)
     end
