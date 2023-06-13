@@ -86,7 +86,7 @@ function advpcd!(
         standardize_hidden_from_v!(rbm, vd; damping, ϵ=ϵh)
 
         # compute gradient
-        ∂d = ∂free_energy(rbm, vd, moments)
+        ∂d = ∂free_energy(rbm, vd; moments)
         ∂m = ∂free_energy(rbm, vm)
         ∂ = ∂d - ∂m
 
