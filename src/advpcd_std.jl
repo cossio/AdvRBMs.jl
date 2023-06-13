@@ -29,7 +29,7 @@ function advpcd!(
     damping::Real = 1//100,
     ϵv::Real = 0, ϵh::Real = 0,
 
-    optim = Adam(),
+    optim::AbstractRule = Adam(),
     ps = (; visible = rbm.visible.par, hidden = rbm.hidden.par, w = rbm.w),
     state = setup(optim, ps),
 
@@ -77,10 +77,6 @@ function advpcd!(
     for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
         rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
     end
-
-    # define parameters for Optimiser and initialize optimiser state
-    ps = (; visible = rbm.visible.par, hidden = rbm.hidden.par, w = rbm.w)
-    state = setup(optim, ps)
 
     for (iter, (vd,)) in zip(1:iters, infinite_minibatches(data; batchsize, shuffle))
         # update Markov chains
