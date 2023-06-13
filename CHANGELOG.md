@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## v1.1.0
+
+- Support StandardizedRestrictedBoltzmannMachines.jl package.
+
 ## [v1.0.1]
 
 - Some compat updates.
