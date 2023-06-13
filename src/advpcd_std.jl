@@ -109,8 +109,8 @@ function advpcd!(
         state, ps = update!(state, ps, gs)
 
         # respect gauge constraints
-        zerosum && zerosum!(rbm)
         rescale_hidden && rescale_hidden_activations!(rbm)
+        zerosum && zerosum!(rbm)
 
         # 1st-order constraint is hard, project weights
         for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
@@ -119,5 +119,6 @@ function advpcd!(
 
         callback(; rbm, optim, state, ps, iter, vm, vd, ∂)
     end
-    return rbm
+
+    return state, ps
 end
