@@ -19,7 +19,9 @@ This package does not export any symbols.
 
 ## Related packages
 
-Implementation of standard Restricted Boltzmann Machines in Julia: <https://github.com/cossio/RestrictedBoltzmannMachines.jl>.
+Implementation of standard Restricted Boltzmann Machines in Julia:
+
+- https://github.com/cossio/RestrictedBoltzmannMachines.jl
 
 Ising model simulations were carried out using [IsingModels.jl](https://github.com/cossio/IsingModels.jl).
 
