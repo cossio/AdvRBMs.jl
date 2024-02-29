@@ -1,7 +1,7 @@
 name = "AdvRBMs"
 uuid = "5c8d321f-d88f-4112-b4bc-67901fc2de0a"
 authors = ["Jorge Fernandez-de-Cossio-Diaz <j.cossio.diaz@gmail.com>"]
-version = "1.1.1-DEV"
+version = "1.1.1"
 
 [deps]
 CenteredRBMs = "def70c09-f69f-4396-afd1-e8507a6dddbf"
