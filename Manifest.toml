@@ -2,7 +2,7 @@
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "37a1428e9fe866d239302807db5808e62e395729"
+project_hash = "c0d0d3d7440a585697857ed858f81f2ba7e5ca36"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -57,12 +57,6 @@ version = "1.11.0"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 version = "1.11.0"
-
-[[deps.CenteredRBMs]]
-deps = ["EllipsisNotation", "FillArrays", "LinearAlgebra", "Optimisers", "Random", "RestrictedBoltzmannMachines", "Statistics"]
-git-tree-sha1 = "902d0a8d3aa6ee3fabc96dbdfe50da08bc6e4bcd"
-uuid = "def70c09-f69f-4396-afd1-e8507a6dddbf"
-version = "4.1.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
@@ -312,12 +306,6 @@ weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
     SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
-
-[[deps.StandardizedRestrictedBoltzmannMachines]]
-deps = ["FillArrays", "LinearAlgebra", "Optimisers", "Random", "RestrictedBoltzmannMachines", "Statistics"]
-git-tree-sha1 = "ab967ddd68f1f034a33f25c21e88e5e09fb128f9"
-uuid = "c8d9fdc7-1808-4fba-8c97-f848504396a5"
-version = "4.3.0"
 
 [[deps.Static]]
 deps = ["CommonWorldInvalidations", "IfElse", "PrecompileTools"]
