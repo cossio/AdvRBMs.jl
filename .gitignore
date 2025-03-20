@@ -19,8 +19,8 @@ deps/src/
 docs/build/
 docs/site/
 
-Manifest.toml
-test/Manifest.toml
+#Manifest.toml
+#test/Manifest.toml
 
 # built sysimage
 JuliaSysimage.so
