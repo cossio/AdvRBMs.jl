@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## v2.0.0
 
-- Use `StandardizedRBM` and `CenteredRBM` from RestrictedBoltzmannMachines.jl package.
+- BREAKING: Use `StandardizedRBM` and `CenteredRBM` from RestrictedBoltzmannMachines.jl package.
 
 ## v1.1.0
 
