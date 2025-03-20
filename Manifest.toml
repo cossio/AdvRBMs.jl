@@ -2,7 +2,7 @@
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "80ac1a7fa4f09718755d751402730a142aef47fe"
+project_hash = "37a1428e9fe866d239302807db5808e62e395729"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -60,9 +60,9 @@ version = "1.11.0"
 
 [[deps.CenteredRBMs]]
 deps = ["EllipsisNotation", "FillArrays", "LinearAlgebra", "Optimisers", "Random", "RestrictedBoltzmannMachines", "Statistics"]
-git-tree-sha1 = "40c9e52486f30e909fc0adf8b01dc9d4ac6769b9"
+git-tree-sha1 = "902d0a8d3aa6ee3fabc96dbdfe50da08bc6e4bcd"
 uuid = "def70c09-f69f-4396-afd1-e8507a6dddbf"
-version = "4.0.3"
+version = "4.1.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
@@ -95,6 +95,21 @@ weakdeps = ["Dates", "LinearAlgebra"]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "1.1.1+0"
+
+[[deps.ConstructionBase]]
+git-tree-sha1 = "76219f1ed5771adbb096743bff43fb5fdd4c1157"
+uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+version = "1.5.8"
+
+    [deps.ConstructionBase.extensions]
+    ConstructionBaseIntervalSetsExt = "IntervalSets"
+    ConstructionBaseLinearAlgebraExt = "LinearAlgebra"
+    ConstructionBaseStaticArraysExt = "StaticArrays"
+
+    [deps.ConstructionBase.weakdeps]
+    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+    LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -136,10 +151,10 @@ version = "1.13.0"
     Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [[deps.Functors]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "64d8e93700c7a3f28f717d265382d52fac9fa1c1"
+deps = ["Compat", "ConstructionBase", "LinearAlgebra", "Random"]
+git-tree-sha1 = "60a0339f28a233601cb74468032b5c302d5067de"
 uuid = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
-version = "0.4.12"
+version = "0.5.2"
 
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -229,10 +244,18 @@ uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.6+0"
 
 [[deps.Optimisers]]
-deps = ["ChainRulesCore", "Functors", "LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "c1fc26bab5df929a5172f296f25d7d08688fd25b"
+deps = ["ChainRulesCore", "ConstructionBase", "Functors", "LinearAlgebra", "Random", "Statistics"]
+git-tree-sha1 = "c57a1a58e29a017a2b07e78d075385b981942430"
 uuid = "3bd65402-5787-11e9-1adc-39752487f4e2"
-version = "0.2.20"
+version = "0.4.5"
+
+    [deps.Optimisers.extensions]
+    OptimisersAdaptExt = ["Adapt"]
+    OptimisersEnzymeCoreExt = "EnzymeCore"
+
+    [deps.Optimisers.weakdeps]
+    Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+    EnzymeCore = "f151be2c-9106-41f4-ab19-57ee4f262869"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
@@ -263,10 +286,18 @@ uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.1"
 
 [[deps.RestrictedBoltzmannMachines]]
-deps = ["ChainRulesCore", "DiffRules", "EllipsisNotation", "FillArrays", "LinearAlgebra", "LogExpFunctions", "Optimisers", "Random", "SpecialFunctions", "Statistics"]
-git-tree-sha1 = "2e185dc2addc1a3b5d70e75ebed8d69b28a5d5a7"
+deps = ["Adapt", "ChainRulesCore", "DiffRules", "EllipsisNotation", "FillArrays", "LinearAlgebra", "LogExpFunctions", "Optimisers", "Random", "SpecialFunctions", "Statistics"]
+git-tree-sha1 = "397fc96f5e3ab6aa434a5a86fd943e77964f1302"
 uuid = "12e6b396-7db5-4506-8cb6-664a4fe1e50e"
-version = "3.2.6"
+version = "3.8.1"
+
+    [deps.RestrictedBoltzmannMachines.extensions]
+    CUDAExt = "CUDA"
+    HDF5Ext = "HDF5"
+
+    [deps.RestrictedBoltzmannMachines.weakdeps]
+    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+    HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -284,9 +315,9 @@ weakdeps = ["ChainRulesCore"]
 
 [[deps.StandardizedRestrictedBoltzmannMachines]]
 deps = ["FillArrays", "LinearAlgebra", "Optimisers", "Random", "RestrictedBoltzmannMachines", "Statistics"]
-git-tree-sha1 = "7086caff895f6cdf0d1820779c74197cea0d80c4"
+git-tree-sha1 = "ab967ddd68f1f034a33f25c21e88e5e09fb128f9"
 uuid = "c8d9fdc7-1808-4fba-8c97-f848504396a5"
-version = "4.0.2"
+version = "4.3.0"
 
 [[deps.Static]]
 deps = ["CommonWorldInvalidations", "IfElse", "PrecompileTools"]
