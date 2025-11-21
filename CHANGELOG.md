@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## Unreleased
 
+## v2.1.0
+
+- Add support for RestrictedBoltzmannMachines v4, v5.
+
 ## v2.0.0
 
 - BREAKING: Use `StandardizedRBM` and `CenteredRBM` from RestrictedBoltzmannMachines.jl package.
