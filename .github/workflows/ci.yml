@@ -16,11 +16,11 @@ jobs:
         arch:
           - x64
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - uses: julia-actions/setup-julia@5c9647d97b78a5debe5164e9eec09d653d29bd71
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@2b1bf4d8a138668ac719ea7ca149b53ed8d8401e
+      - uses: julia-actions/cache@d10a6fd8f31b12404a54613ebad242900567f2b9
       - uses: julia-actions/julia-buildpkg@e3eb439fad4f9aba7da2667e7510e4a46ebc46e1
-      - uses: julia-actions/julia-runtest@678da69444cd5f13d7e674a90cb4f534639a14f9
+      - uses: julia-actions/julia-runtest@b67f25cc97aa716a662fc9586ea6d5d7bf6c2da3
