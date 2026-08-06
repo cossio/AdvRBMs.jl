@@ -4,9 +4,9 @@ All notable changes to this project will be documented in this file. The format 
 
 ## Unreleased
 
-- Require Julia 1.10 or later (was 1.8).
-- Raise dependency lower bounds to tested versions: RestrictedBoltzmannMachines 5, FillArrays 1.9, Optimisers 0.3.2.
-- Remove unused explicit imports from the module (no behavior change).
+- Require Julia 1.12 or later (was 1.8).
+- Raise dependency lower bounds to tested versions: RestrictedBoltzmannMachines 5, FillArrays 1.9, Optimisers 0.4.
+- Remove unused explicit imports and the unused internal helper `batchcat` (no behavior change).
 
 ## v2.1.0
 
