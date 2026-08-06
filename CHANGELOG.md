@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file. The format 
 
 ## Unreleased
 
+- Require Julia 1.12 or later (was 1.8).
+- Raise dependency lower bounds to tested versions: RestrictedBoltzmannMachines 5.6, FillArrays 1.9, Optimisers 0.4.
+
 ## v2.1.0
 
 - Add support for RestrictedBoltzmannMachines v4, v5.

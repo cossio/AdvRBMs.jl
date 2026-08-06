@@ -69,7 +69,7 @@ found is a Nit, lead the summary with "No blocking issues."
   (`.github/workflows/ci.yml`) and the agent-docs linter
   (`.github/scripts/lint_agent_docs.py`).
 - Formatting and code style preferences.
-- Mechanical `Manifest.toml` updates that accompany Project.toml changes.
+- Manifest files: they are gitignored and resolved fresh from Project.toml.
 - Missing CHANGELOG.md entries for CI, workflow, or repo-tooling changes —
   the changelog records only user-facing package changes.
 
