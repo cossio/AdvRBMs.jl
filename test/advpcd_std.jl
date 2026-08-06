@@ -31,16 +31,14 @@ flatw(rbm) = reshape(rbm.w, :, prod(size(rbm.hidden)))
 flatq(q) = reshape(q, :, size(q)[end])
 
 @testset "advpcd, standardized, 1st-order constraint" begin
-    # heterogeneous unit statistics, so that scale_v is far from uniform and
-    # the standardized-weight metric differs from the data-space metric
+    # heterogeneous unit statistics, so that scale_v is far from uniform
     p = reshape(range(0.1, 0.9; length = 10), 5, 2)
     data = rand(5, 2, 128) .< p
 
     rbm = standardize(BinaryRBM(randn(5, 2), randn(3), randn(5, 2, 3)))
     q = randn(5, 2, 1)
     advpcd!(rbm, data; qs = [q], steps = 1, iters = 10, batchsize = 32)
-    # the hard constraint acts on the unstandardized weights w ./ scale_v, so
-    # that the inputs to the hidden units carry no 1st-order label information
+    # the hard constraint acts on the unstandardized weights w ./ scale_v
     @test norm(flatq(q ./ rbm.scale_v)' * flatw(rbm)) < 1.0e-10
     # projecting in the standardized-weight metric would not satisfy this
     @test norm(flatq(q)' * flatw(rbm)) > 1.0e-3
@@ -82,8 +80,7 @@ end
 end
 
 @testset "λQ penalty gradient incorporates hidden scales" begin
-    # advpcd! penalizes the physical statistic w̃' * Q * w̃ with w̃ = w ./ scale_h,
-    # using the chain rule ∂f/∂w = (∂f/∂w̃) ./ scale_h; check it against Zygote
+    # check ∂f/∂w = (∂f/∂w̃) ./ scale_h for f = Σₖ ||w̃' Qₖ w̃||²/2, w̃ = w ./ scale_h
     w = randn(6, 3)
     sh = reshape([0.5, 1.0, 2.0], 1, 3)
     Q = randn(6, 6, 2)
@@ -132,9 +129,7 @@ end
     initialize!(rbm0, data)
     rbm = standardize(rbm0)
     q = randn(N, 1)
-    # constrain only the first hidden color of each site: the hidden zerosum
-    # gauge move mixes colors within a site, so the constraint must be
-    # re-imposed after the gauge fix to hold at exit
+    # constrain only the first hidden color of each site
     ℋ = CartesianIndices((1:1, 1:S))
     advpcd!(rbm, data; qs = [q], ℋs = [ℋ], steps = 1, iters = 10, batchsize = 32)
     q_std = vec(q) ./ rbm.scale_v

@@ -5,10 +5,8 @@ Trains the RBM on data using Persistent Contrastive divergence with constraints.
 Each entry `q` of `qs` contains 1st-order constraints, that `q[..., t]' * W` be small, for each `t`.
 Each entry `Q` of `Qs` contains 2nd-order constraints, that `W' * Q[..., t] * W` be small, for each `t`.
 Each constraint group acts on the hidden units selected by the matching entry of `ℋs`.
-The constraints are interpreted in data space (as computed by `calc_q` / `calc_Q` from `data`),
-and are rescaled internally by the visible standardization scales, so that `W` above refers to
-the unstandardized weights and the inputs to constrained hidden units carry no 1st-order
-information about the labels.
+Constraints are interpreted in data space (as computed by `calc_q` / `calc_Q`) and are
+rescaled internally, so that `W` above refers to the unstandardized weights.
 """
 function advpcd!(
         rbm::StandardizedRBM,
@@ -76,7 +74,6 @@ function advpcd!(
 
     qs_inv = map(pseudo_inv_of_q, qs)
 
-    # hard 1st-order constraint: project weights of constrained hidden units
     function project_w!()
         for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
             rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
@@ -111,9 +108,7 @@ function advpcd!(
         # 2nd order constraint is soft, update gradient accordingly
         if 0 < λQ < Inf
             for (Q, ℋ) in zip(Qs, ℋs)
-                # the penalty acts on the unstandardized weights: with
-                # w̃ = w ./ scale_h the physical statistic is w̃' * Q * w̃, and
-                # by the chain rule ∂f/∂w = (∂f/∂w̃) ./ scale_h
+                # penalize w̃' * Q * w̃ with w̃ = w ./ scale_h; ∂f/∂w = (∂f/∂w̃) ./ scale_h
                 sh = reshape(rbm.scale_h[ℋ], map(one, size(rbm.visible))..., size(ℋ)...)
                 w̃ = rbm.w[𝒱, ℋ] ./ sh
                 ∂.w[𝒱, ℋ] .+= λQ .* ∂wQw(w̃, Q) ./ sh
