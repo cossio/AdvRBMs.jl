@@ -1,0 +1,4 @@
+interface:
+  display_name: "Register New AdvRBMs Version"
+  short_description: "Release and register a new AdvRBMs package version"
+  default_prompt: "Use $register-new-version to choose, release, and register the next AdvRBMs.jl version."

@@ -1,0 +1,26 @@
+# CI for the agent-instruction files: CLAUDE.md, AGENTS.md, and the skills
+# under .agents/ (and .claude/ if it appears).
+#
+# Deterministic checks (.github/scripts/lint_agent_docs.py): size budgets,
+# SKILL.md frontmatter rules, referenced repo paths exist, --project flags
+# point at real Julia projects. Runs on every push/PR so renaming a source
+# file that the docs mention breaks CI immediately.
+#
+# Semantic review expectations for these files (contradictions, redundancy,
+# context bloat) are documented in REVIEW.md.
+name: Agent docs
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  lint:
+    name: Lint agent docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Lint CLAUDE.md, AGENTS.md and skills
+        run: python3 .github/scripts/lint_agent_docs.py
