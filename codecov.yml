@@ -9,6 +9,7 @@ coverage:
       default:
         target: 100%
 
-# src/wip holds work-in-progress code not included in the module, so it can never be covered.
+# src/wip and src/sylvester.jl hold code not included in the module, so they can never be covered.
 ignore:
   - "src/wip"
+  - "src/sylvester.jl"
