@@ -87,14 +87,8 @@ function advpcd!(
     # impose hard 1st-order constraint on initial weights
     project_w!()
 
-    # gauge constraints, after the projection: for Potts visible layers with
-    # zerosum q, zerosum! shifts each color block of w by a multiple of
-    # scale_v, which preserves the rescaled hard constraint, so the gauge and
-    # the constraint hold simultaneously. On a Potts hidden layer, however,
-    # zerosum! mixes weight columns across hidden colors and can break the
-    # constraint when a group in ℋs covers only part of a hidden site, so the
-    # constraint is re-imposed afterwards (a numerical no-op that keeps the
-    # gauge intact whenever the gauge moves preserved it).
+    # gauge constraints; re-project afterwards because zerosum! on a Potts
+    # hidden layer mixes weight columns and can break the constraint
     rescale_hidden && rescale_hidden_activations!(rbm)
     zerosum && zerosum!(rbm)
     project_w!()
@@ -133,9 +127,7 @@ function advpcd!(
         # 1st-order constraint is hard, project weights
         project_w!()
 
-        # respect gauge constraints, after the projection, then re-impose the
-        # hard constraint in case a gauge move did not preserve it (see the
-        # pre-loop comment); the constraint always holds when the loop exits
+        # respect gauge constraints, then re-project (see comment above)
         rescale_hidden && rescale_hidden_activations!(rbm)
         zerosum && zerosum!(rbm)
         project_w!()
