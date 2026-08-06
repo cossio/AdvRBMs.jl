@@ -8,44 +8,44 @@ Matrix `q` contains the 1st-order constraints, that `q[...,t]' * W` be small, fo
 Matrix `Q` contains the 2nd-order constraints, that `W' * Q[...,t] * W` be small, for each `t`.
 """
 function advpcdsoft!(
-    rbm::RBM,
-    data::AbstractArray;
-    batchsize::Int = 1,
-    epochs::Int = 1,
-    wts = nothing,
-    steps::Int = 1, # fantasy chains MC steps
-    optim = Adam(),
-    vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
-    moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
+        rbm::RBM,
+        data::AbstractArray;
+        batchsize::Int = 1,
+        epochs::Int = 1,
+        wts = nothing,
+        steps::Int = 1, # fantasy chains MC steps
+        optim = Adam(),
+        vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
+        moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
 
-    # regularization
-    l2_fields::Real = 0, # visible fields L2 regularization
-    l1_weights::Real = 0, # weights L1 regularization
-    l2_weights::Real = 0, # weights L2 regularization
-    l2l1_weights::Real = 0, # weights L2/L1 regularization
+        # regularization
+        l2_fields::Real = 0, # visible fields L2 regularization
+        l1_weights::Real = 0, # weights L1 regularization
+        l2_weights::Real = 0, # weights L2 regularization
+        l2l1_weights::Real = 0, # weights L2/L1 regularization
 
-    # gauge
-    zerosum::Bool = true, # zerosum gauge for Potts layers
-    center::Bool = true, # center gradients
+        # gauge
+        zerosum::Bool = true, # zerosum gauge for Potts layers
+        center::Bool = true, # center gradients
 
-    # scale hidden unit activations to var(h) = 1
-    standardize_hidden::Bool = true,
+        # scale hidden unit activations to var(h) = 1
+        standardize_hidden::Bool = true,
 
-    # damping for hidden activity statistics tracking
-    hidden_damp::Real = batchsize / size(data)[end],
-    ϵh = 1e-2, # prevent vanishing var(h)
+        # damping for hidden activity statistics tracking
+        hidden_damp::Real = batchsize / size(data)[end],
+        ϵh = 1.0e-2, # prevent vanishing var(h)
 
-    callback = nothing, # called for every batch
+        callback = nothing, # called for every batch
 
-    qs::AbstractVector = [], # 1st-order constraints
-    Qs::AbstractVector = [], # 2nd-order constraints
-    λq::Real = 0, # 1st-order adversarial soft constraint, penalty
-    λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
+        qs::AbstractVector = [], # 1st-order constraints
+        Qs::AbstractVector = [], # 2nd-order constraints
+        λq::Real = 0, # 1st-order adversarial soft constraint, penalty
+        λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
 
-    # indices of constrained hidden units
-    ℋ1::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))],
-    ℋ2::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))]
-)
+        # indices of constrained hidden units
+        ℋ1::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))],
+        ℋ2::AbstractVector{<:CartesianIndices} = [CartesianIndices(size(rbm.hidden))]
+    )
     error("this is outdated, don't call me ... update!!")
 
     @assert size(data) == (size(rbm.visible)..., size(data)[end])

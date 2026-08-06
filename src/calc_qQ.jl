@@ -1,4 +1,4 @@
-const Wts = Union{Nothing,AbstractVector}
+const Wts = Union{Nothing, AbstractVector}
 
 function calc_qs(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T}
     q = calc_q(T, u, v; wts)
@@ -25,7 +25,7 @@ function calc_q(u::AbstractVector{Bool}, v::AbstractMatrix; wts::Wts = nothing)
     @assert length(u) == size(v, 2) # same number of examples
     @assert 0 < mean(u) < 1 # non-singular
     if isnothing(wts)
-        q = (v .- mean(v; dims=2)) * (u .- mean(u)) / length(u)
+        q = (v .- mean(v; dims = 2)) * (u .- mean(u)) / length(u)
     else
         @assert length(wts) == length(u)
         v_mean = v * wts / sum(wts)
@@ -45,8 +45,8 @@ end
 # for categorical labels (u is onehot encoded)
 function calc_q(u::AbstractMatrix{Bool}, v::AbstractMatrix; wts::Wts = nothing)
     @assert size(u, 2) == size(v, 2) # number of samples
-    U = u .- wmean(u; dims=2, wts)
-    V = v .- wmean(v; dims=2, wts)
+    U = u .- wmean(u; dims = 2, wts)
+    V = v .- wmean(v; dims = 2, wts)
     if isnothing(wts)
         q = V * U' / size(v, 2)
     else
@@ -60,7 +60,7 @@ end
 function calc_Q(u::AbstractVector{Bool}, v::AbstractMatrix; wts::Wts = nothing)
     @assert length(u) == size(v, 2)
     U = u .- wmean(u; wts)
-    V = v .- wmean(v; wts, dims=2)
+    V = v .- wmean(v; wts, dims = 2)
     if isnothing(wts)
         Q = V * (U .* V') / length(u)
     else
@@ -82,23 +82,23 @@ function calc_Q(u::AbstractMatrix{Bool}, v::AbstractArray; wts::Wts = nothing)
     # we can drop a row because it is a linear combination of the others
     Q = zeros(front(size(v))..., front(size(v))..., size(u, 1) - 1)
     for k in 2:size(u, 1)
-        selectdim(Q, ndims(Q), k - 1) .= calc_Q(u[k,:], v; wts)
+        selectdim(Q, ndims(Q), k - 1) .= calc_Q(u[k, :], v; wts)
     end
     return Q
 end
 
-function calc_q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T<:Number}
+function calc_q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T <: Number}
     q = calc_q(u, v; wts)
     return Array{T}(q)
 end
 
-function calc_Q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T<:Number}
+function calc_Q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T <: Number}
     Q = calc_Q(u, v; wts)
     return Array{T}(Q)
 end
 
 # concatenate across last dimension
-batchcat(A::AbstractArray, B::AbstractArray...) = cat(A, B...; dims=ndims(A))
+batchcat(A::AbstractArray, B::AbstractArray...) = cat(A, B...; dims = ndims(A))
 
 # # for categorical labels
 # function calc_Q(u::AbstractMatrix{Bool}, v::AbstractArray; wts::Wts = nothing)
