@@ -1,7 +1,7 @@
 using Test: @test, @testset, @inferred
 using Zygote: gradient
 using LinearAlgebra: norm, dot, pinv
-using AdvRBMs: kernelproj, ∂qw, ∂wQw, sylvester_projection, pseudo_inv_of_q
+using AdvRBMs: kernelproj, ∂qw, ∂wQw, pseudo_inv_of_q
 
 @testset "pseudo_inv_of_q" begin
     q = randn(28, 64, 5)
@@ -36,6 +36,14 @@ end
         norm(q' * w)^2 / 2
     end
     @test ∂ ≈ @inferred ∂qw(w, q)
+
+    # tensor-shaped weights and constraints flatten the visible dimensions
+    w = randn(5, 2, 3)
+    q = randn(5, 2, 2)
+    ∂, = gradient(w) do w
+        norm(reshape(q, 10, 2)' * reshape(w, 10, 3))^2 / 2
+    end
+    @test ∂ ≈ @inferred ∂qw(w, q)
 end
 
 @testset "∂wQw" begin
@@ -49,11 +57,4 @@ end
         sum(norm(w' * Q[:, :, k] * w)^2 / 2 for k in 1:2)
     end
     @test ∂ ≈ @inferred ∂wQw(w, Q)
-end
-
-@testset "sylvester_projection" begin
-    A = randn(5, 4)
-    X = randn(5, 4)
-    Y = @inferred sylvester_projection(A, X)
-    @test A' * Y ≈ -Y' * A
 end

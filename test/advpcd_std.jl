@@ -4,7 +4,7 @@ using Random: bitrand
 using LinearAlgebra: norm
 using Statistics: mean
 using RestrictedBoltzmannMachines: BinaryRBM, initialize!, standardize, sample_v_from_v
-using AdvRBMs: advpcd!
+using AdvRBMs: advpcd!, calc_q, calc_Q
 
 Random.seed!(2)
 
@@ -44,4 +44,15 @@ flatq(q) = reshape(q, :, size(q)[end])
     # only the hidden units in ℋ are constrained
     @test norm(flatq(q)' * flatw(rbm)[:, ℋ]) < 1.0e-10
     @test norm(flatq(q)' * flatw(rbm)) > 1.0e-3
+end
+
+@testset "advpcd, standardized, 2nd-order soft constraint" begin
+    data = bitrand(5, 2, 128)
+    u = bitrand(128)
+    q = calc_q(u, data)
+    Q = calc_Q(u, data)
+    rbm = standardize(BinaryRBM(randn(5, 2), randn(3), randn(5, 2, 3)))
+    advpcd!(rbm, data; qs = [q], Qs = [Q], λQ = 1.0, steps = 1, iters = 10, batchsize = 32)
+    @test norm(flatq(q)' * flatw(rbm)) < 1.0e-10
+    @test all(isfinite, rbm.w)
 end

@@ -4,6 +4,9 @@ end
 module explicit_imports_tests
     include("explicit_imports.jl")
 end
+module util_tests
+    include("util.jl")
+end
 module proj_tests
     include("proj.jl")
 end

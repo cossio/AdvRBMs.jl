@@ -2,7 +2,7 @@ module AdvRBMs
 
 import RestrictedBoltzmannMachines as RBMs
 using Base: front
-using LinearAlgebra: sylvester, dot, Diagonal, pinv
+using LinearAlgebra: dot, Diagonal, pinv
 using Statistics: mean
 using FillArrays: Zeros, Falses
 using Optimisers: AbstractRule, setup, update!, Adam

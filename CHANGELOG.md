@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. The format 
 
 - Require Julia 1.12 or later (was 1.8).
 - Raise dependency lower bounds to tested versions: RestrictedBoltzmannMachines 5.6, FillArrays 1.9, Optimisers 0.4.
+- Remove the unused internal helpers `sylvester_projection` and `project∂!` (marked "old stuff" in the source; no behavior change).
 
 ## v2.1.0
 

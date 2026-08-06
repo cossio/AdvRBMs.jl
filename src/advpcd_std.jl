@@ -68,11 +68,6 @@ function advpcd!(
     zerosum && zerosum!(rbm)
     rescale_hidden && rescale_hidden_activations!(rbm)
 
-    # initial centering from data
-    if rbm isa CenteredRBM
-        center_from_data!(rbm, data)
-    end
-
     # impose hard 1st-order constraint on initial weights
     qs_inv = map(pseudo_inv_of_q, qs)
     for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)

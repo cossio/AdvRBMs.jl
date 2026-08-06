@@ -4,8 +4,8 @@ using Test: @testset, @test, @inferred
 using Random: bitrand
 using LinearAlgebra: norm, Diagonal, I, dot
 using Statistics: mean, cor
-using RestrictedBoltzmannMachines: RBM, BinaryRBM, inputs_h_from_v, initialize!, sample_v_from_v
-using AdvRBMs: advpcd!
+using RestrictedBoltzmannMachines: RBM, BinaryRBM, inputs_h_from_v, initialize!, sample_v_from_v, center
+using AdvRBMs: advpcd!, calc_q, calc_Q
 
 Random.seed!(2)
 
@@ -39,4 +39,24 @@ end
     advpcd!(rbm, data; qs = [q], ℋs = [ℋ], steps = 1, iters = 10, batchsize = 32)
     @info @test norm(inputs_h_from_v(rbm, q)[ℋ]) < 1.0e-10
     @info @test norm(inputs_h_from_v(rbm, q)[1, :]) > 1.0e-5
+end
+
+@testset "advpcd, centered" begin
+    rbm = center(BinaryRBM(randn(5, 2), randn(3), randn(5, 2, 3)))
+    q = randn(5, 2, 1)
+    data = bitrand(5, 2, 128)
+    advpcd!(rbm, data; qs = [q], steps = 1, iters = 10, batchsize = 32)
+    # the hard constraint q' * w ≈ 0 acts on the flattened weights
+    @test norm(reshape(q, :, 1)' * reshape(rbm.w, :, 3)) < 1.0e-10
+end
+
+@testset "advpcd, 2nd-order soft constraint" begin
+    data = bitrand(5, 2, 128)
+    u = bitrand(128)
+    q = calc_q(u, data)
+    Q = calc_Q(u, data)
+    rbm = BinaryRBM(randn(5, 2), randn(3), randn(5, 2, 3))
+    advpcd!(rbm, data; qs = [q], Qs = [Q], λQ = 1.0, steps = 1, iters = 10, batchsize = 32)
+    @test norm(inputs_h_from_v(rbm, q)) < 1.0e-10
+    @test all(isfinite, rbm.w)
 end
