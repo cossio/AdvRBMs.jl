@@ -8,7 +8,7 @@ AdvRBMs.jl is a Julia package for training Restricted Boltzmann Machines
 (RBMs) with 1st- and 2nd-order adversarial constraints on the weights. The
 constraints promote concentration of information about labeled features
 into selected hidden units (see CITATION.bib). It builds on
-RestrictedBoltzmannMachines.jl and supports Julia 1.8 and later.
+RestrictedBoltzmannMachines.jl and supports Julia 1.12 and later.
 
 ## Repository workflow
 
@@ -21,8 +21,8 @@ RestrictedBoltzmannMachines.jl and supports Julia 1.8 and later.
 
 ## Workspace and environment
 
-- The root `Manifest.toml` is committed. Keep it in sync when Project.toml
-  changes and commit the resolved result.
+- Manifest.toml files are gitignored; environments resolve fresh from the
+  compat bounds in Project.toml.
 - The test project needs the root package developed into it for standalone
   runs. If that setup is missing, run
   `julia --project=test -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'`.
