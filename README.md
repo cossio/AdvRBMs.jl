@@ -1,6 +1,8 @@
 # AdvRBMs Julia package
 
-Train and sample [Restricted Boltzmann Machines](https://en.wikipedia.org/wiki/Restricted_Boltzmann_machine) (**RBMs**) in Julia, with 1st and 2nd order **adv**ersarial constraints on the weights, that promote concentratation of information about labeled features into selected hidden units.
+[![Coverage](https://codecov.io/gh/cossio/AdvRBMs.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/cossio/AdvRBMs.jl)
+
+Train and sample [Restricted Boltzmann Machines](https://en.wikipedia.org/wiki/Restricted_Boltzmann_machine) (**RBMs**) in Julia, with 1st and 2nd order **adv**ersarial constraints on the weights, that promote concentration of information about labeled features into selected hidden units.
 
 ## Installation
 
