@@ -2,7 +2,8 @@ import Random
 using Test: @testset, @test, @inferred
 using Statistics: mean
 using Random: bitrand
-using AdvRBMs: calc_q, calc_Q, calc_qs, calc_Qs
+using LinearAlgebra: norm
+using AdvRBMs: calc_q, calc_Q, calc_qs, calc_Qs, kernelproj, ∂wQw
 
 # calc_q / calc_Q require labels with both classes present, so seed the RNG to
 # keep the bitrand draws below away from the degenerate all-zero/all-one case.
@@ -43,6 +44,42 @@ end
     qs = @inferred calc_qs(u, v)
     Qs = @inferred calc_Qs(u, v)
 
+    # entries keep the trailing singleton constraint dimension expected by advpcd!
+    @test size(only(qs)) == size(q)
+    @test size(only(Qs)) == size(Q)
     @test only(qs) ≈ q
     @test only(Qs) ≈ Q
+end
+
+@testset "calc_qs, calc_Qs entries are usable as advpcd! constraints" begin
+    w = randn(5, 3, 7)
+
+    # categorical labels, tensor visible layer
+    u = bitrand(20)
+    u = BitMatrix([u'; 1 .- u'])
+    v = randn(5, 3, 20)
+    for q in calc_qs(u, v)
+        wp = kernelproj(w, q)
+        @test norm(sum(q .* wp; dims = (1, 2))) < 1.0e-9 * norm(q) * norm(w)
+        # only the single intended constraint is projected out: the removed
+        # component lies in the span of the flattened q
+        removed = reshape(w - wp, 15, 7)
+        qf = reshape(q, 15)
+        @test norm(removed - qf * (qf' * removed) / (qf' * qf)) < 1.0e-9 * norm(w)
+    end
+    for Q in calc_Qs(u, v)
+        @test size(∂wQw(w, Q)) == size(w)
+    end
+
+    # binary labels, vector visible layer
+    u = bitrand(20)
+    v = randn(15, 20)
+    w = randn(15, 7)
+    for q in calc_qs(u, v)
+        wp = kernelproj(w, q)
+        @test norm(reshape(q, 1, :) * wp) < 1.0e-9 * norm(q) * norm(w)
+    end
+    for Q in calc_Qs(u, v)
+        @test size(∂wQw(w, Q)) == size(w)
+    end
 end

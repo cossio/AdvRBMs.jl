@@ -2,12 +2,14 @@ const Wts = Union{Nothing, AbstractVector}
 
 function calc_qs(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T}
     q = calc_q(T, u, v; wts)
-    return [collect(selectdim(q, ndims(q), k)) for k in 1:size(q)[end]]
+    # index with k:k to keep the trailing singleton constraint dimension,
+    # which `advpcd!` (via `kernelproj`) expects in each `qs` entry
+    return [collect(selectdim(q, ndims(q), k:k)) for k in 1:size(q)[end]]
 end
 
 function calc_Qs(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T}
-    Q = calc_Q(u, v; wts)
-    return [collect(selectdim(Q, ndims(Q), k)) for k in 1:size(Q)[end]]
+    Q = calc_Q(T, u, v; wts)
+    return [collect(selectdim(Q, ndims(Q), k:k)) for k in 1:size(Q)[end]]
 end
 
 calc_qs(u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) = calc_qs(Float64, u, v; wts)
