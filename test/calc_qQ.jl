@@ -54,8 +54,11 @@ end
 @testset "calc_qs, calc_Qs entries are usable as advpcd! constraints" begin
     w = randn(5, 3, 7)
 
-    # categorical labels, tensor visible layer
+    # categorical labels, tensor visible layer; force both classes present so
+    # the draw can never be degenerate, regardless of the RNG state
     u = bitrand(20)
+    u[1] = true
+    u[2] = false
     u = BitMatrix([u'; 1 .- u'])
     v = randn(5, 3, 20)
     for q in calc_qs(u, v)
@@ -71,8 +74,10 @@ end
         @test size(∂wQw(w, Q)) == size(w)
     end
 
-    # binary labels, vector visible layer
+    # binary labels, vector visible layer; force both classes present
     u = bitrand(20)
+    u[1] = true
+    u[2] = false
     v = randn(15, 20)
     w = randn(15, 7)
     for q in calc_qs(u, v)
