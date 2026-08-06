@@ -1,7 +1,12 @@
+import Random
 using Test: @testset, @test, @inferred
 using Statistics: mean
 using Random: bitrand
 using AdvRBMs: calc_q, calc_Q, calc_qs, calc_Qs
+
+# calc_q / calc_Q require labels with both classes present, so seed the RNG to
+# keep the bitrand draws below away from the degenerate all-zero/all-one case.
+Random.seed!(1)
 
 @testset "calc_q, calc_Q" begin
     u = bitrand(10)
