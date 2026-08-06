@@ -97,9 +97,6 @@ function calc_Q(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts
     return Array{T}(Q)
 end
 
-# concatenate across last dimension
-batchcat(A::AbstractArray, B::AbstractArray...) = cat(A, B...; dims = ndims(A))
-
 # # for categorical labels
 # function calc_Q(u::AbstractMatrix{Bool}, v::AbstractArray; wts::Wts = nothing)
 #     @assert length(u) == size(v)[end]
