@@ -1,7 +1,11 @@
 name: CI
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - master
+  pull_request:
+permissions:
+  contents: read
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -10,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.11'
+          - '1'
         os:
           - ubuntu-latest
         arch:
@@ -24,3 +28,32 @@ jobs:
       - uses: julia-actions/cache@b7788abd52452d5bc033d69796e110d9906af4ab
       - uses: julia-actions/julia-buildpkg@e3eb439fad4f9aba7da2667e7510e4a46ebc46e1
       - uses: julia-actions/julia-runtest@6e050c8013b833b1195105ff2fce9cd802f53271
+        with:
+          coverage: true
+      - uses: julia-actions/julia-processcoverage@03114f09f119417c3242a9fb6e0b722676aedf38
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          # Blocking on trusted runs (pushes and same-repo PRs, which have the token).
+          # Fork and Dependabot PRs can't access secrets, so their uploads stay best-effort.
+          fail_ci_if_error: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' }}
+  downgrade:
+    name: Downgrade compat - Julia min - ubuntu-latest - x64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: julia-actions/setup-julia@fa02766e078afaaf09b14210362cee14137e6a32
+        with:
+          version: 'min'
+          arch: x64
+      - uses: julia-actions/julia-downgrade-compat@2c401f8b47edbcafc2e1edbff8e71f33dce71822
+        with:
+          projects: '.'
+          mode: deps
+      - uses: julia-actions/cache@b7788abd52452d5bc033d69796e110d9906af4ab
+      - uses: julia-actions/julia-buildpkg@e3eb439fad4f9aba7da2667e7510e4a46ebc46e1
+      - uses: julia-actions/julia-runtest@6e050c8013b833b1195105ff2fce9cd802f53271
+        with:
+          allow_reresolve: false
+          force_latest_compatible_version: false

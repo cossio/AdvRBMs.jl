@@ -1,9 +1,10 @@
 """
-    advpcd!(rbm, data; q, Q, ...)
+    advpcd!(rbm, data; qs, Qs, ℋs, ...)
 
 Trains the RBM on data using Persistent Contrastive divergence with constraints.
-Matrix `q` contains the 1st-order constraints, that `q[...,t]' * W` be small, for each `t`.
-Matrix `Q` contains the 2nd-order constraints, that `W' * Q[...,t] * W` be small, for each `t`.
+Each entry `q` of `qs` contains 1st-order constraints, that `q[..., t]' * W` be small, for each `t`.
+Each entry `Q` of `Qs` contains 2nd-order constraints, that `W' * Q[..., t] * W` be small, for each `t`.
+Each constraint group acts on the hidden units selected by the matching entry of `ℋs`.
 """
 function advpcd!(
         rbm::Union{RBM, CenteredRBM},
