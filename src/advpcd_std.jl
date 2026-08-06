@@ -82,18 +82,30 @@ function advpcd!(
     # indices in visible dimensions
     𝒱 = CartesianIndices(size(rbm.visible))
 
-    # impose hard 1st-order constraint on initial weights
     qs_inv = map(pseudo_inv_of_q, qs)
-    for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
-        rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
+
+    # hard 1st-order constraint: project weights of constrained hidden units
+    function project_w!()
+        for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
+            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
+        end
+        return nothing
     end
+
+    # impose hard 1st-order constraint on initial weights
+    project_w!()
 
     # gauge constraints, after the projection: for Potts visible layers with
     # zerosum q, zerosum! shifts each color block of w by a multiple of
     # scale_v, which preserves the rescaled hard constraint, so the gauge and
-    # the constraint hold simultaneously
+    # the constraint hold simultaneously. On a Potts hidden layer, however,
+    # zerosum! mixes weight columns across hidden colors and can break the
+    # constraint when a group in ℋs covers only part of a hidden site, so the
+    # constraint is re-imposed afterwards (a numerical no-op that keeps the
+    # gauge intact whenever the gauge moves preserved it).
     rescale_hidden && rescale_hidden_activations!(rbm)
     zerosum && zerosum!(rbm)
+    project_w!()
 
     for (iter, (vd,)) in zip(1:iters, infinite_minibatches(data; batchsize, shuffle))
         # update Markov chains
@@ -127,15 +139,14 @@ function advpcd!(
         state, ps = update!(state, ps, gs)
 
         # 1st-order constraint is hard, project weights
-        for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
-            rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
-        end
+        project_w!()
 
-        # respect gauge constraints, after the projection: for Potts visible
-        # layers with zerosum q, zerosum! preserves the rescaled hard
-        # constraint, so the gauge and the constraint hold simultaneously
+        # respect gauge constraints, after the projection, then re-impose the
+        # hard constraint in case a gauge move did not preserve it (see the
+        # pre-loop comment); the constraint always holds when the loop exits
         rescale_hidden && rescale_hidden_activations!(rbm)
         zerosum && zerosum!(rbm)
+        project_w!()
 
         callback(; rbm, optim, state, ps, iter, vm, vd, ∂)
     end

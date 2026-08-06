@@ -124,3 +124,21 @@ end
     # ... and the zerosum gauge of the unstandardized weights hold simultaneously
     @test norm(mean(rbm.w ./ rbm.scale_v; dims = 1)) < 1.0e-8
 end
+
+@testset "advpcd, standardized, hidden Potts: partially constrained sites" begin
+    N, A, S, T = 5, 3, 2, 300 # visible units, hidden colors, hidden sites
+    data = bitrand(N, T)
+    rbm0 = RBM(Binary(Float64, (N,)), Potts(Float64, (A, S)), 0.01 .* randn(N, A, S))
+    initialize!(rbm0, data)
+    rbm = standardize(rbm0)
+    q = randn(N, 1)
+    # constrain only the first hidden color of each site: the hidden zerosum
+    # gauge move mixes colors within a site, so the constraint must be
+    # re-imposed after the gauge fix to hold at exit
+    ℋ = CartesianIndices((1:1, 1:S))
+    advpcd!(rbm, data; qs = [q], ℋs = [ℋ], steps = 1, iters = 10, batchsize = 32)
+    q_std = vec(q) ./ rbm.scale_v
+    @test norm(q_std' * rbm.w[:, 1, :]) < 1.0e-10
+    # the unconstrained colors are not projected
+    @test norm(q_std' * rbm.w[:, 2, :]) > 1.0e-6
+end
