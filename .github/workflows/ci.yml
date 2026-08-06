@@ -47,9 +47,9 @@ jobs:
         with:
           version: 'min'
           arch: x64
-      # The committed Manifest.toml pins the latest resolved versions, which
+      # The committed manifests pin the latest resolved versions, which
       # conflict with the downgraded compat bounds; resolve from scratch.
-      - run: rm Manifest.toml
+      - run: rm Manifest.toml test/Manifest.toml
       - uses: julia-actions/julia-downgrade-compat@2c401f8b47edbcafc2e1edbff8e71f33dce71822
         with:
           projects: '.'
