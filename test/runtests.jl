@@ -13,3 +13,6 @@ end
 module advpcd_tests
     include("advpcd.jl")
 end
+module advpcd_std_tests
+    include("advpcd_std.jl")
+end
