@@ -2,8 +2,7 @@ const Wts = Union{Nothing, AbstractVector}
 
 function calc_qs(::Type{T}, u::AbstractVecOrMat{Bool}, v::AbstractArray; wts::Wts = nothing) where {T}
     q = calc_q(T, u, v; wts)
-    # index with k:k to keep the trailing singleton constraint dimension,
-    # which `advpcd!` (via `kernelproj`) expects in each `qs` entry
+    # k:k keeps the trailing singleton constraint dimension expected by advpcd!
     return [collect(selectdim(q, ndims(q), k:k)) for k in 1:size(q)[end]]
 end
 

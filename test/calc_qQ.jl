@@ -54,8 +54,7 @@ end
 @testset "calc_qs, calc_Qs entries are usable as advpcd! constraints" begin
     w = randn(5, 3, 7)
 
-    # categorical labels, tensor visible layer; force both classes present so
-    # the draw can never be degenerate, regardless of the RNG state
+    # categorical labels, tensor visible layer; force both classes present
     u = bitrand(20)
     u[1] = true
     u[2] = false
@@ -64,8 +63,7 @@ end
     for q in calc_qs(u, v)
         wp = kernelproj(w, q)
         @test norm(sum(q .* wp; dims = (1, 2))) < 1.0e-9 * norm(q) * norm(w)
-        # only the single intended constraint is projected out: the removed
-        # component lies in the span of the flattened q
+        # the removed component lies in the span of the single flattened q
         removed = reshape(w - wp, 15, 7)
         qf = reshape(q, 15)
         @test norm(removed - qf * (qf' * removed) / (qf' * qf)) < 1.0e-9 * norm(w)
