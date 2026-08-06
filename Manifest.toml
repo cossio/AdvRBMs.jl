@@ -1,8 +1,8 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.1"
+julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "d2ad404d74981452d56cc387473f9b5a2d52b1f1"
+project_hash = "efcc52824de31fd73029035928d65818751c7331"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -22,7 +22,7 @@ version = "4.4.0"
 deps = ["FillArrays", "LinearAlgebra", "Optimisers", "RestrictedBoltzmannMachines", "Statistics"]
 path = "."
 uuid = "5c8d321f-d88f-4112-b4bc-67901fc2de0a"
-version = "2.1.0-DEV"
+version = "2.1.1-DEV"
 
 [[deps.ArrayInterface]]
 deps = ["Adapt", "LinearAlgebra"]
