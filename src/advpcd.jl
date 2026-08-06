@@ -6,42 +6,42 @@ Matrix `q` contains the 1st-order constraints, that `q[...,t]' * W` be small, fo
 Matrix `Q` contains the 2nd-order constraints, that `W' * Q[...,t] * W` be small, for each `t`.
 """
 function advpcd!(
-    rbm::Union{RBM, CenteredRBM},
-    data::AbstractArray;
-    batchsize::Int = 1,
-    iters::Int = 1, # number of parameter updates
-    wts::Union{AbstractVector, Nothing} = nothing,
-    steps::Int = 1, # fantasy chains MC steps
-    optim = Adam(),
-    moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
+        rbm::Union{RBM, CenteredRBM},
+        data::AbstractArray;
+        batchsize::Int = 1,
+        iters::Int = 1, # number of parameter updates
+        wts::Union{AbstractVector, Nothing} = nothing,
+        steps::Int = 1, # fantasy chains MC steps
+        optim = Adam(),
+        moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
 
-    # regularization
-    l2_fields::Real = 0, # visible fields L2 regularization
-    l1_weights::Real = 0, # weights L1 regularization
-    l2_weights::Real = 0, # weights L2 regularization
-    l2l1_weights::Real = 0, # weights L2/L1 regularization
+        # regularization
+        l2_fields::Real = 0, # visible fields L2 regularization
+        l1_weights::Real = 0, # weights L1 regularization
+        l2_weights::Real = 0, # weights L2 regularization
+        l2l1_weights::Real = 0, # weights L2/L1 regularization
 
-    # gauge
-    zerosum::Bool = true, # zerosum gauge for Potts layers
-    rescale::Bool = true, # normalize weights to unit norm
+        # gauge
+        zerosum::Bool = true, # zerosum gauge for Potts layers
+        rescale::Bool = true, # normalize weights to unit norm
 
-    callback = Returns(nothing), # called for every batch
+        callback = Returns(nothing), # called for every batch
 
-    vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
-    shuffle::Bool = true,
+        vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
+        shuffle::Bool = true,
 
-    # damping to update hidden statistics for centering
-    hidden_offset_damping::Real = 1//100,
+        # damping to update hidden statistics for centering
+        hidden_offset_damping::Real = 1 // 100,
 
-    # constraints are given as a list, where each entry describes the constraints applied
-    # to a group of hidden units (the groups must be exclusive)
-    # For Potts units, q, Q should themselves be zerosum!
-    qs::AbstractVector{<:AbstractArray{<:Real}} = default_qs(rbm), # 1st-order constraints
-    Qs::AbstractVector{<:AbstractArray{<:Real}} = default_Qs(rbm, qs), # 2nd-order constraints
-    λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
-    # indices of constrained hidden units in each group (the groups must not intersect)
-    ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
-)
+        # constraints are given as a list, where each entry describes the constraints applied
+        # to a group of hidden units (the groups must be exclusive)
+        # For Potts units, q, Q should themselves be zerosum!
+        qs::AbstractVector{<:AbstractArray{<:Real}} = default_qs(rbm), # 1st-order constraints
+        Qs::AbstractVector{<:AbstractArray{<:Real}} = default_Qs(rbm, qs), # 2nd-order constraints
+        λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
+        # indices of constrained hidden units in each group (the groups must not intersect)
+        ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
+    )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
     isnothing(wts) || @assert size(data)[end] == length(wts)
     @assert 0 ≤ hidden_offset_damping ≤ 1

@@ -6,51 +6,51 @@ Matrix `q` contains the 1st-order constraints, that `q[...,t]' * W` be small, fo
 Matrix `Q` contains the 2nd-order constraints, that `W' * Q[...,t] * W` be small, for each `t`.
 """
 function advpcd!(
-    rbm::StandardizedRBM,
-    data::AbstractArray;
+        rbm::StandardizedRBM,
+        data::AbstractArray;
 
-    batchsize::Int = 1,
-    shuffle::Bool = true,
+        batchsize::Int = 1,
+        shuffle::Bool = true,
 
-    iters::Int = 1, # number of parameter updates
+        iters::Int = 1, # number of parameter updates
 
-    steps::Int = 1, # fantasy chains MC steps
-    vm::AbstractArray = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
+        steps::Int = 1, # fantasy chains MC steps
+        vm::AbstractArray = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
 
-    moments = moments_from_samples(rbm.visible, data), # sufficient statistics for visible layer
+        moments = moments_from_samples(rbm.visible, data), # sufficient statistics for visible layer
 
-    # regularization
-    l2_fields::Real = 0, # visible fields L2 regularization
-    l1_weights::Real = 0, # weights L1 regularization
-    l2_weights::Real = 0, # weights L2 regularization
-    l2l1_weights::Real = 0, # weights L2/L1 regularization
+        # regularization
+        l2_fields::Real = 0, # visible fields L2 regularization
+        l1_weights::Real = 0, # weights L1 regularization
+        l2_weights::Real = 0, # weights L2 regularization
+        l2l1_weights::Real = 0, # weights L2/L1 regularization
 
-    # "pseudocount" for estimating variances of v and h and damping
-    damping::Real = 1//100,
-    ϵv::Real = 0, ϵh::Real = 0,
+        # "pseudocount" for estimating variances of v and h and damping
+        damping::Real = 1 // 100,
+        ϵv::Real = 0, ϵh::Real = 0,
 
-    optim::AbstractRule = Adam(),
-    ps = (; visible = rbm.visible.par, hidden = rbm.hidden.par, w = rbm.w),
-    state = setup(optim, ps),
+        optim::AbstractRule = Adam(),
+        ps = (; visible = rbm.visible.par, hidden = rbm.hidden.par, w = rbm.w),
+        state = setup(optim, ps),
 
-    # Absorb the scale_h into the hidden unit activation (for continuous hidden units).
-    # Results in hidden units with var(h) ~ 1.
-    rescale_hidden::Bool = true,
+        # Absorb the scale_h into the hidden unit activation (for continuous hidden units).
+        # Results in hidden units with var(h) ~ 1.
+        rescale_hidden::Bool = true,
 
-    callback = Returns(nothing),
+        callback = Returns(nothing),
 
-    # gauge
-    zerosum::Bool = true, # zerosum gauge for Potts layers
+        # gauge
+        zerosum::Bool = true, # zerosum gauge for Potts layers
 
-    # constraints are given as a list, where each entry describes the constraints applied
-    # to a group of hidden units (the groups must be exclusive)
-    # For Potts units, q, Q should themselves be zerosum!
-    qs::AbstractVector{<:AbstractArray{<:Real}} = default_qs(rbm), # 1st-order constraints
-    Qs::AbstractVector{<:AbstractArray{<:Real}} = default_Qs(rbm, qs), # 2nd-order constraints
-    λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
-    # indices of constrained hidden units in each group (the groups must not intersect)
-    ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
-)
+        # constraints are given as a list, where each entry describes the constraints applied
+        # to a group of hidden units (the groups must be exclusive)
+        # For Potts units, q, Q should themselves be zerosum!
+        qs::AbstractVector{<:AbstractArray{<:Real}} = default_qs(rbm), # 1st-order constraints
+        Qs::AbstractVector{<:AbstractArray{<:Real}} = default_Qs(rbm, qs), # 2nd-order constraints
+        λQ::Real = 0, # 2nd-order adversarial soft constraint, penalty
+        # indices of constrained hidden units in each group (the groups must not intersect)
+        ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
+    )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
     @assert 0 ≤ damping ≤ 1
 
@@ -83,7 +83,7 @@ function advpcd!(
         vm = sample_v_from_v(rbm, vm; steps)
 
         # update standardization
-        standardize_hidden_from_v!(rbm, vd; damping, ϵ=ϵh)
+        standardize_hidden_from_v!(rbm, vd; damping, ϵ = ϵh)
 
         # compute gradient
         ∂d = ∂free_energy(rbm, vd; moments)

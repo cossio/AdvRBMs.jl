@@ -8,7 +8,7 @@ function kernelproj(w::AbstractArray, q::AbstractArray; qinv::AbstractArray = ps
     K = ndims(q) - 1
     @assert size(w)[1:K] == size(q)[1:K]
     N = prod(size(w, d) for d in 1:K)
-    w_proj = kernelproj(reshape(w, N, :), reshape(q, N, :); qinv=reshape(qinv, :, N))
+    w_proj = kernelproj(reshape(w, N, :), reshape(q, N, :); qinv = reshape(qinv, :, N))
     return reshape(w_proj, size(w))
 end
 
@@ -53,9 +53,9 @@ function ∂wQw(w::AbstractArray, Q::AbstractArray)
     return reshape(∂, size(w))
 end
 
-function _∂wQw(w::AbstractMatrix, Q::AbstractArray{<:Any,3})
+function _∂wQw(w::AbstractMatrix, Q::AbstractArray{<:Any, 3})
     @assert size(w, 1) == size(Q, 1) == size(Q, 2)
-    return sum(_∂wQw(w, Q[:,:,k]) for k in 1:size(Q,3))
+    return sum(_∂wQw(w, Q[:, :, k]) for k in 1:size(Q, 3))
 end
 
 function _∂wQw(w::AbstractMatrix, Q::AbstractMatrix)
@@ -76,8 +76,8 @@ Returns the projection of `X` onto the solution space of `A'X + X'A = 0`.
 """
 function sylvester_projection(A::AbstractMatrix, X::AbstractMatrix)
     @assert size(A) == size(X)
-    AA = A'*A
-    AX = A'*X
+    AA = A' * A
+    AX = A' * X
     L = sylvester(AA, AA, -(AX + AX'))
     return X - A * L
 end
