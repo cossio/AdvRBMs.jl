@@ -5,6 +5,10 @@ Trains the RBM on data using Persistent Contrastive divergence with constraints.
 Each entry `q` of `qs` contains 1st-order constraints, that `q[..., t]' * W` be small, for each `t`.
 Each entry `Q` of `Qs` contains 2nd-order constraints, that `W' * Q[..., t] * W` be small, for each `t`.
 Each constraint group acts on the hidden units selected by the matching entry of `ℋs`.
+The constraints are interpreted in data space (as computed by `calc_q` / `calc_Q` from `data`),
+and are rescaled internally by the visible standardization scales, so that `W` above refers to
+the unstandardized weights and the inputs to constrained hidden units carry no 1st-order
+information about the labels.
 """
 function advpcd!(
         rbm::StandardizedRBM,
@@ -60,6 +64,18 @@ function advpcd!(
     @assert empty_intersections(ℋs)
 
     standardize_visible_from_data!(rbm, data; ϵ = ϵv)
+
+    # Hidden inputs depend on the data through the unstandardized weights
+    # w ./ (scale_v ⊗ scale_h), so constraints q, Q computed from the data
+    # (e.g. with calc_q / calc_Q) act on the standardized weights `rbm.w` as
+    # q ./ scale_v and Q ./ (scale_v ⊗ scale_v). scale_v stays fixed for the
+    # rest of training, and scale_h is a positive per-hidden-unit scalar that
+    # leaves the constraints invariant, so rescaling once here is enough.
+    qs = [q ./ rbm.scale_v for q in qs]
+    if 0 < λQ
+        scale_v_2 = reshape(rbm.scale_v, map(one, size(rbm.visible))..., size(rbm.visible)...)
+        Qs = [Q ./ rbm.scale_v ./ scale_v_2 for Q in Qs]
+    end
 
     # indices in visible dimensions
     𝒱 = CartesianIndices(size(rbm.visible))
