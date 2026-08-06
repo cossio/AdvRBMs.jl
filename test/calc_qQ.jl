@@ -47,5 +47,5 @@ end
     @test only(Qs) ≈ Q
 
     # uniform weights reproduce the unweighted statistics
-    @test calc_q(u, v; wts = ones(10)) ≈ q
+    @test calc_q(u, v; wts = ones(size(u, 2))) ≈ q
 end

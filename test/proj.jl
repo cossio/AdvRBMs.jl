@@ -40,8 +40,9 @@ end
     # tensor-shaped weights and constraints flatten the visible dimensions
     w = randn(5, 2, 3)
     q = randn(5, 2, 2)
+    n = prod(size(w)[1:(end - 1)])
     ∂, = gradient(w) do w
-        norm(reshape(q, 10, 2)' * reshape(w, 10, 3))^2 / 2
+        norm(reshape(q, n, :)' * reshape(w, n, :))^2 / 2
     end
     @test ∂ ≈ @inferred ∂qw(w, q)
 end
