@@ -1,6 +1,9 @@
 module aqua_tests
     include("aqua.jl")
 end
+module explicit_imports_tests
+    include("explicit_imports.jl")
+end
 module proj_tests
     include("proj.jl")
 end

@@ -1,0 +1,15 @@
+coverage:
+  status:
+    # Overall repository coverage: must not drop by more than 1% in a PR.
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    # Coverage of the lines changed/added by a PR: forces new code to come with tests.
+    patch:
+      default:
+        target: 85%
+
+# src/wip holds work-in-progress code not included in the module, so it can never be covered.
+ignore:
+  - "src/wip"
