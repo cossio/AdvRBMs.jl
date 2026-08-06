@@ -65,14 +65,6 @@ function advpcd!(
 
     standardize_visible_from_data!(rbm, data; ϵ = ϵv)
 
-    # Hidden inputs depend on the data through the unstandardized weights
-    # w ./ (scale_v ⊗ scale_h), so constraints q, Q computed from the data
-    # (e.g. with calc_q / calc_Q) act on the standardized weights `rbm.w` as
-    # q ./ scale_v and Q ./ (scale_v ⊗ scale_v). scale_v stays fixed for the
-    # rest of training, so rescaling once here is enough. scale_h changes
-    # during training: it leaves the hard 1st-order constraint invariant (it
-    # rescales each weight column by a positive scalar), while the 2nd-order
-    # penalty incorporates the current scale_h at each evaluation in the loop.
     qs = [q ./ rbm.scale_v for q in qs]
     if 0 < λQ
         scale_v_2 = reshape(rbm.scale_v, map(one, size(rbm.visible))..., size(rbm.visible)...)
