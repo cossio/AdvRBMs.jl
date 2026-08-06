@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## Unreleased
 
-- Fix the adversarial constraints in `advpcd!` for `StandardizedRBM`: the 1st-order hard projection and the 2nd-order penalty were applied to the standardized weights, ignoring the visible standardization scales. Constraints computed from data (`calc_q`/`calc_Q`) are now rescaled by `scale_v` internally, so that inputs to constrained hidden units carry no 1st-order label information, as intended.
+- Fix the adversarial constraints in `advpcd!` for `StandardizedRBM`: the 1st-order hard projection and the 2nd-order penalty were applied to the standardized weights, ignoring the standardization scales. Constraints computed from data (`calc_q`/`calc_Q`) are now rescaled internally by `scale_v` (and the 2nd-order penalty additionally by the current `scale_h`), so that inputs to constrained hidden units carry no 1st-order label information, as intended. The hard projection now runs before the zerosum gauge fix, so for Potts visible layers with zerosum constraints the gauge and the constraint hold simultaneously.
 - Require Julia 1.12 or later (was 1.8).
 - Raise dependency lower bounds to tested versions: RestrictedBoltzmannMachines 5.6, FillArrays 1.9, Optimisers 0.4.
 

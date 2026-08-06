@@ -69,8 +69,10 @@ function advpcd!(
     # w ./ (scale_v ⊗ scale_h), so constraints q, Q computed from the data
     # (e.g. with calc_q / calc_Q) act on the standardized weights `rbm.w` as
     # q ./ scale_v and Q ./ (scale_v ⊗ scale_v). scale_v stays fixed for the
-    # rest of training, and scale_h is a positive per-hidden-unit scalar that
-    # leaves the constraints invariant, so rescaling once here is enough.
+    # rest of training, so rescaling once here is enough. scale_h changes
+    # during training: it leaves the hard 1st-order constraint invariant (it
+    # rescales each weight column by a positive scalar), while the 2nd-order
+    # penalty incorporates the current scale_h at each evaluation in the loop.
     qs = [q ./ rbm.scale_v for q in qs]
     if 0 < λQ
         scale_v_2 = reshape(rbm.scale_v, map(one, size(rbm.visible))..., size(rbm.visible)...)
@@ -80,20 +82,18 @@ function advpcd!(
     # indices in visible dimensions
     𝒱 = CartesianIndices(size(rbm.visible))
 
-    # gauge constraints
-    zerosum && zerosum!(rbm)
-    rescale_hidden && rescale_hidden_activations!(rbm)
-
-    # initial centering from data
-    if rbm isa CenteredRBM
-        center_from_data!(rbm, data)
-    end
-
     # impose hard 1st-order constraint on initial weights
     qs_inv = map(pseudo_inv_of_q, qs)
     for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
         rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
     end
+
+    # gauge constraints, after the projection: for Potts visible layers with
+    # zerosum q, zerosum! shifts each color block of w by a multiple of
+    # scale_v, which preserves the rescaled hard constraint, so the gauge and
+    # the constraint hold simultaneously
+    rescale_hidden && rescale_hidden_activations!(rbm)
+    zerosum && zerosum!(rbm)
 
     for (iter, (vd,)) in zip(1:iters, infinite_minibatches(data; batchsize, shuffle))
         # update Markov chains
@@ -113,7 +113,12 @@ function advpcd!(
         # 2nd order constraint is soft, update gradient accordingly
         if 0 < λQ < Inf
             for (Q, ℋ) in zip(Qs, ℋs)
-                ∂.w[𝒱, ℋ] .+= λQ .* ∂wQw(rbm.w[𝒱, ℋ], Q)
+                # the penalty acts on the unstandardized weights: with
+                # w̃ = w ./ scale_h the physical statistic is w̃' * Q * w̃, and
+                # by the chain rule ∂f/∂w = (∂f/∂w̃) ./ scale_h
+                sh = reshape(rbm.scale_h[ℋ], map(one, size(rbm.visible))..., size(ℋ)...)
+                w̃ = rbm.w[𝒱, ℋ] ./ sh
+                ∂.w[𝒱, ℋ] .+= λQ .* ∂wQw(w̃, Q) ./ sh
             end
         end
 
@@ -121,14 +126,16 @@ function advpcd!(
         gs = (; visible = ∂.visible, hidden = ∂.hidden, w = ∂.w)
         state, ps = update!(state, ps, gs)
 
-        # respect gauge constraints
-        rescale_hidden && rescale_hidden_activations!(rbm)
-        zerosum && zerosum!(rbm)
-
         # 1st-order constraint is hard, project weights
         for (q, ℋ, qinv) in zip(qs, ℋs, qs_inv)
             rbm.w[𝒱, ℋ] .= kernelproj(rbm.w[𝒱, ℋ], q; qinv)
         end
+
+        # respect gauge constraints, after the projection: for Potts visible
+        # layers with zerosum q, zerosum! preserves the rescaled hard
+        # constraint, so the gauge and the constraint hold simultaneously
+        rescale_hidden && rescale_hidden_activations!(rbm)
+        zerosum && zerosum!(rbm)
 
         callback(; rbm, optim, state, ps, iter, vm, vd, ∂)
     end

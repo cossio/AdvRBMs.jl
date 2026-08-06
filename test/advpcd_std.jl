@@ -3,9 +3,10 @@ using Test: @testset, @test
 using Random: bitrand
 using LinearAlgebra: norm
 using Statistics: mean, cov
-using RestrictedBoltzmannMachines: BinaryRBM, initialize!, standardize, sample_v_from_v,
-    inputs_h_from_v
-using AdvRBMs: advpcd!, calc_q, calc_Q
+using Zygote: gradient
+using RestrictedBoltzmannMachines: RBM, BinaryRBM, Binary, Potts, initialize!, standardize,
+    sample_v_from_v, inputs_h_from_v
+using AdvRBMs: advpcd!, calc_q, calc_Q, ∂wQw
 
 Random.seed!(2)
 
@@ -78,4 +79,48 @@ end
     advpcd!(rbm, data; qs = [q], Qs = [Q], λQ = 0.01, steps = 1, iters = 5, batchsize = 64)
     I_h = inputs_h_from_v(rbm, data)
     @test maximum(abs, [cov(I_h[μ, :], labels) for μ in 1:H]) < 1.0e-10
+end
+
+@testset "λQ penalty gradient incorporates hidden scales" begin
+    # advpcd! penalizes the physical statistic w̃' * Q * w̃ with w̃ = w ./ scale_h,
+    # using the chain rule ∂f/∂w = (∂f/∂w̃) ./ scale_h; check it against Zygote
+    w = randn(6, 3)
+    sh = reshape([0.5, 1.0, 2.0], 1, 3)
+    Q = randn(6, 6, 2)
+    for k in axes(Q, 3)
+        Q[:, :, k] = Q[:, :, k] + Q[:, :, k]'
+    end
+    ∂, = gradient(w) do w
+        w̃ = w ./ sh
+        sum(norm(w̃' * Q[:, :, k] * w̃)^2 / 2 for k in axes(Q, 3))
+    end
+    @test ∂ ≈ ∂wQw(w ./ sh, Q) ./ sh
+end
+
+@testset "advpcd, standardized, Potts visible: gauge and constraint hold together" begin
+    A, N, H, T = 3, 4, 2, 500
+    labels = bitrand(T)
+    labels[1] = true
+    labels[2] = false
+    # categorical data with label-dependent, site-dependent color frequencies
+    data = falses(A, N, T)
+    for i in 1:N, t in 1:T
+        r = rand()
+        p1 = 0.2 + 0.3 * labels[t] * isodd(i)
+        a = r < p1 ? 1 : (r < p1 + 0.3 ? 2 : 3)
+        data[a, i, t] = true
+    end
+    q = calc_q(labels, data)
+    # calc_q on one-hot data is zerosum over colors
+    @test norm(sum(q; dims = 1)) < 1.0e-12
+
+    rbm0 = RBM(Potts(Float64, (A, N)), Binary(Float64, (H,)), zeros(A, N, H))
+    initialize!(rbm0, data)
+    rbm = standardize(rbm0)
+    advpcd!(rbm, data; qs = [q], steps = 1, iters = 10, batchsize = 32)
+
+    # the hard constraint in the data-space metric ...
+    @test norm(flatq(q ./ rbm.scale_v)' * flatw(rbm)) < 1.0e-8
+    # ... and the zerosum gauge of the unstandardized weights hold simultaneously
+    @test norm(mean(rbm.w ./ rbm.scale_v; dims = 1)) < 1.0e-8
 end
