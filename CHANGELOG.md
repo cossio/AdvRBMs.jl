@@ -10,7 +10,6 @@ All notable changes to this project will be documented in this file. The format 
 - Require Julia 1.12 or later (was 1.8).
 - Raise dependency lower bounds to tested versions: FillArrays 1.9, Optimisers 0.4.
 - Move the unused internal helpers `sylvester_projection` and `project∂!` out of the module, into `src/sylvester.jl` (not included).
-- Compute weighted means in `calc_q`/`calc_Q` with StatsBase's weighted `mean` instead of the internal `RestrictedBoltzmannMachines.wmean` helper. StatsBase is a new dependency.
 
 ## v2.1.0
 
