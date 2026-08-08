@@ -1,15 +1,15 @@
 coverage:
   status:
-    # Overall repository coverage: must not drop by more than 1% in a PR.
+    # The package maintains full line coverage; any uncovered line fails CI.
     project:
       default:
-        target: auto
-        threshold: 1%
-    # Coverage of the lines changed/added by a PR: forces new code to come with tests.
+        target: 100%
+    # Lines changed/added by a PR must be fully covered as well.
     patch:
       default:
-        target: 85%
+        target: 100%
 
-# src/wip holds work-in-progress code not included in the module, so it can never be covered.
+# src/wip and src/sylvester.jl hold code not included in the module, so they can never be covered.
 ignore:
   - "src/wip"
+  - "src/sylvester.jl"

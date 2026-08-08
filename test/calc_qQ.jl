@@ -49,6 +49,9 @@ end
     @test size(only(Qs)) == size(Q)
     @test only(qs) ≈ q
     @test only(Qs) ≈ Q
+
+    # uniform weights reproduce the unweighted statistics
+    @test calc_q(u, v; wts = ones(size(u, 2))) ≈ q
 end
 
 @testset "calc_qs, calc_Qs entries are usable as advpcd! constraints" begin

@@ -137,3 +137,15 @@ end
     # the unconstrained colors are not projected
     @test norm(q_std' * rbm.w[:, 2, :]) > 1.0e-6
 end
+
+@testset "advpcd, standardized, 2nd-order soft constraint" begin
+    data = bitrand(5, 2, 128)
+    u = bitrand(128)
+    q = calc_q(u, data)
+    Q = calc_Q(u, data)
+    rbm = standardize(BinaryRBM(randn(5, 2), randn(3), randn(5, 2, 3)))
+    advpcd!(rbm, data; qs = [q], Qs = [Q], λQ = 1.0, steps = 1, iters = 10, batchsize = 32)
+    # the hard constraint holds in the data-space metric (see #40)
+    @test norm(flatq(q ./ rbm.scale_v)' * flatw(rbm)) < 1.0e-10
+    @test all(isfinite, rbm.w)
+end

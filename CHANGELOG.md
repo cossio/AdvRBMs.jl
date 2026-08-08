@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. The format 
 - Fix `calc_qs` and `calc_Qs` dropping the trailing constraint dimension of each entry, which made their outputs unusable as the `qs`/`Qs` keyword arguments of `advpcd!` (an error for vector visible layers and for the 2nd-order penalty, and a silently over-constrained projection for multi-dimensional visible layers). `calc_Qs(T, u, v)` now also honors the requested element type `T`.
 - Require Julia 1.12 or later (was 1.8).
 - Raise dependency lower bounds to tested versions: RestrictedBoltzmannMachines 5.6, FillArrays 1.9, Optimisers 0.4.
+- Move the unused internal helpers `sylvester_projection` and `project∂!` out of the module, into `src/sylvester.jl` (not included).
 
 ## v2.1.0
 
