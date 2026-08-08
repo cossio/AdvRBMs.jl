@@ -3,6 +3,7 @@ module AdvRBMs
 using Base: front
 using LinearAlgebra: dot, Diagonal, pinv
 using Statistics: mean
+using StatsBase: weights
 using FillArrays: Zeros, Falses
 using Optimisers: AbstractRule, setup, update!, Adam
 using RestrictedBoltzmannMachines: StandardizedRBM, standardize_visible_from_data!,
@@ -12,7 +13,7 @@ using RestrictedBoltzmannMachines: CenteredRBM, center_hidden_from_data!, center
 using RestrictedBoltzmannMachines: sample_v_from_v,
     ∂free_energy, ∂regularize!,
     sample_from_inputs, moments_from_samples, infinite_minibatches,
-    zerosum!, rescale_weights!, wmean
+    zerosum!, rescale_weights!
 
 include("calc_qQ.jl")
 include("proj.jl")

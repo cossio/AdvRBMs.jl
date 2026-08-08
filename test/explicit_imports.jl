@@ -4,6 +4,7 @@ import FillArrays
 import LinearAlgebra
 import Optimisers
 import Statistics
+import StatsBase
 using Test: @test, @testset
 
 @testset "ExplicitImports" begin
@@ -13,7 +14,7 @@ using Test: @test, @testset
         # which are not public, so the publicness check covers only the imports
         # from the remaining dependencies.
         all_explicit_imports_are_public = (
-            from = (Base, LinearAlgebra, Statistics, FillArrays, Optimisers),
+            from = (Base, LinearAlgebra, Statistics, StatsBase, FillArrays, Optimisers),
         ),
     )
 end
