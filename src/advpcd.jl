@@ -102,11 +102,9 @@ function advpcd!(
         gs = (; visible = ∂.visible, hidden = ∂.hidden, w = ∂.w)
         state, ps = update!(state, ps, gs)
 
-        # centering
+        # centering (damped update of hidden offsets towards <h>_d from minibatch)
         if rbm isa CenteredRBM
-            offset_h_new = grad2ave(rbm.hidden, -∂d.hidden) # <h>_d from minibatch
-            offset_h = (1 - hidden_offset_damping) * rbm.offset_h + hidden_offset_damping * offset_h_new
-            center_hidden!(rbm, offset_h)
+            center_hidden_from_data!(rbm, vd; wts = wd, damping = hidden_offset_damping)
         end
 
         # respect gauge constraints
