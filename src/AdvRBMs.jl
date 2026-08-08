@@ -1,6 +1,5 @@
 module AdvRBMs
 
-import RestrictedBoltzmannMachines as RBMs
 using Base: front
 using LinearAlgebra: dot, Diagonal, pinv
 using Statistics: mean
@@ -9,7 +8,7 @@ using Optimisers: AbstractRule, setup, update!, Adam
 using RestrictedBoltzmannMachines: StandardizedRBM, standardize_visible_from_data!,
     standardize_hidden_from_v!, rescale_hidden_activations!
 using RestrictedBoltzmannMachines: RBM
-using RestrictedBoltzmannMachines: CenteredRBM, grad2ave, center_hidden!, center_from_data!
+using RestrictedBoltzmannMachines: CenteredRBM, center_hidden_from_data!, center_from_data!
 using RestrictedBoltzmannMachines: sample_v_from_v,
     ∂free_energy, ∂regularize!,
     sample_from_inputs, moments_from_samples, infinite_minibatches,

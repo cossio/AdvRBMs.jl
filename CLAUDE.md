@@ -36,7 +36,8 @@ RestrictedBoltzmannMachines.jl and supports Julia 1.12 and later.
 
 - The package exports no symbols. Prefer `import AdvRBMs` and qualified
   names, or explicit `using AdvRBMs: ...`. Internally the code imports
-  `RestrictedBoltzmannMachines as RBMs`.
+  each needed symbol explicitly with
+  `using RestrictedBoltzmannMachines: ...`.
 - Array conventions follow RestrictedBoltzmannMachines.jl: layer dimensions
   come first and the trailing dimension indexes samples (batch). `rbm.w`
   has shape `(size(visible)..., size(hidden)...)`. Preserve this convention
