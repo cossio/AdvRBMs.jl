@@ -26,6 +26,12 @@ Random.seed!(1)
 
     @test calc_q(Float32, u, v)::AbstractArray{Float32} ≈ calc_q(u, v)
     @test calc_Q(Float32, u, v)::AbstractArray{Float32} ≈ calc_Q(u, v)
+
+    # integer sample weights match replicating the corresponding samples
+    wts = float.(rand(1:3, length(u)))
+    idx = reduce(vcat, [fill(t, Int(wts[t])) for t in eachindex(wts)])
+    @test calc_q(u, v; wts) ≈ calc_q(u[idx], v[:, :, idx])
+    @test calc_Q(u, v; wts) ≈ calc_Q(u[idx], v[:, :, idx])
 end
 
 @testset "q, Q for categorical labels" begin
@@ -52,6 +58,12 @@ end
 
     # uniform weights reproduce the unweighted statistics
     @test calc_q(u, v; wts = ones(size(u, 2))) ≈ q
+
+    # integer sample weights match replicating the corresponding samples
+    wts = float.(rand(1:3, size(u, 2)))
+    idx = reduce(vcat, [fill(t, Int(wts[t])) for t in eachindex(wts)])
+    @test calc_q(u, v; wts) ≈ calc_q(u[:, idx], v[:, :, idx])
+    @test calc_Q(u, v; wts) ≈ calc_Q(u[:, idx], v[:, :, idx])
 end
 
 @testset "calc_qs, calc_Qs entries are usable as advpcd! constraints" begin

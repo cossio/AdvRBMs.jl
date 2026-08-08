@@ -46,12 +46,15 @@ end
 # for categorical labels (u is onehot encoded)
 function calc_q(u::AbstractMatrix{Bool}, v::AbstractMatrix; wts::Wts = nothing)
     @assert size(u, 2) == size(v, 2) # number of samples
-    U = u .- wmean(u; dims = 2, wts)
-    V = v .- wmean(v; dims = 2, wts)
     if isnothing(wts)
+        U = u .- mean(u; dims = 2)
+        V = v .- mean(v; dims = 2)
         q = V * U' / size(v, 2)
     else
         @assert length(wts) == size(v, 2)
+        w = weights(wts)
+        U = u .- mean(u, w; dims = 2)
+        V = v .- mean(v, w; dims = 2)
         q = V * Diagonal(wts) * U' / sum(wts)
     end
     return q[:, 2:end] # we can drop a row because it is a linear combination of the others
@@ -60,11 +63,15 @@ end
 # for binary labels
 function calc_Q(u::AbstractVector{Bool}, v::AbstractMatrix; wts::Wts = nothing)
     @assert length(u) == size(v, 2)
-    U = u .- wmean(u; wts)
-    V = v .- wmean(v; wts, dims = 2)
     if isnothing(wts)
+        U = u .- mean(u)
+        V = v .- mean(v; dims = 2)
         Q = V * (U .* V') / length(u)
     else
+        @assert length(wts) == length(u)
+        w = weights(wts)
+        U = u .- mean(u, w)
+        V = v .- mean(v, w; dims = 2)
         Q = V * Diagonal(wts) * (U .* V') / sum(wts)
     end
     return reshape(Q, size(Q)..., 1)
