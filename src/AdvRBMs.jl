@@ -1,6 +1,5 @@
 module AdvRBMs
 
-import RestrictedBoltzmannMachines as RBMs
 using Base: front
 using LinearAlgebra: dot, Diagonal, pinv
 using Statistics: mean
