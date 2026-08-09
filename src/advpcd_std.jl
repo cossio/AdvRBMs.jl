@@ -18,7 +18,7 @@ function advpcd!(
         iters::Int = 1, # number of parameter updates
 
         steps::Int = 1, # fantasy chains MC steps
-        vm::AbstractArray = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., min(batchsize, size(data)[end]))),
+        vm::AbstractArray = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
 
         moments = moments_from_samples(rbm.visible, data), # sufficient statistics for visible layer
 

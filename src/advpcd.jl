@@ -28,7 +28,7 @@ function advpcd!(
 
         callback = Returns(nothing), # called for every batch
 
-        vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., min(batchsize, size(data)[end]))),
+        vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
         shuffle::Bool = true,
 
         # damping to update hidden statistics for centering
