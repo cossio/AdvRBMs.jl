@@ -1,10 +1,10 @@
 module AdvRBMs
 
 using Base: front
-using LinearAlgebra: dot, Diagonal, pinv
+using LinearAlgebra: Diagonal, pinv
 using Statistics: mean
 using StatsBase: weights
-using FillArrays: Zeros, Falses
+using FillArrays: Zeros, Falses, Trues
 using Optimisers: AbstractRule, setup, update!, Adam
 using RestrictedBoltzmannMachines: StandardizedRBM, standardize_visible_from_data!,
     standardize_hidden_from_v!, rescale_hidden_activations!
@@ -13,7 +13,7 @@ using RestrictedBoltzmannMachines: CenteredRBM, center_hidden_from_data!, center
 using RestrictedBoltzmannMachines: sample_v_from_v,
     ∂free_energy, ∂regularize!,
     sample_from_inputs, moments_from_samples, infinite_minibatches,
-    zerosum!, rescale_weights!
+    zerosum!, rescale_weights!, uniform_weights, _validate_weights
 
 include("calc_qQ.jl")
 include("proj.jl")
