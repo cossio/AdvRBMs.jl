@@ -55,7 +55,7 @@ function advpcd!(
         ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
     )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
-    size(data)[end] > 0 || throw(ArgumentError("data must contain at least one sample"))
+    @assert size(data)[end] > 0
     batchsize = min(batchsize, size(data)[end])
     @assert 0 ≤ damping ≤ 1
 

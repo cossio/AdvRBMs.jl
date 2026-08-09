@@ -44,9 +44,7 @@ function advpcd!(
         ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
     )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
-    size(data)[end] > 0 || throw(ArgumentError("data must contain at least one sample"))
-    length(wts) == size(data)[end] ||
-        throw(DimensionMismatch("length(wts) must equal the number of data samples"))
+    @assert length(wts) == size(data)[end] > 0
     _validate_weights(wts)
     @assert 0 ≤ hidden_offset_damping ≤ 1
 
