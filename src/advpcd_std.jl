@@ -18,7 +18,7 @@ function advpcd!(
         iters::Int = 1, # number of parameter updates
 
         steps::Int = 1, # fantasy chains MC steps
-        vm::AbstractArray = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
+        vm::AbstractArray = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., min(batchsize, size(data)[end]))),
 
         moments = moments_from_samples(rbm.visible, data), # sufficient statistics for visible layer
 
@@ -55,6 +55,8 @@ function advpcd!(
         ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
     )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
+    size(data)[end] > 0 || throw(ArgumentError("data must contain at least one sample"))
+    batchsize = min(batchsize, size(data)[end])
     @assert 0 ≤ damping ≤ 1
 
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported
