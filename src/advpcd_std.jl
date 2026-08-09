@@ -55,6 +55,8 @@ function advpcd!(
         ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
     )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
+    @assert size(data)[end] > 0
+    batchsize = min(batchsize, size(data)[end])
     @assert 0 ≤ damping ≤ 1
 
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported

@@ -11,7 +11,7 @@ function advpcd!(
         data::AbstractArray;
         batchsize::Int = 1,
         iters::Int = 1, # number of parameter updates
-        wts::Union{AbstractVector, Nothing} = nothing,
+        wts::AbstractVector{<:Real} = uniform_weights(rbm.visible, data), # data weights
         steps::Int = 1, # fantasy chains MC steps
         optim = Adam(),
         moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
@@ -44,7 +44,8 @@ function advpcd!(
         ℋs::AbstractVector{<:CartesianIndices} = default_ℋs(rbm, qs)
     )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
-    isnothing(wts) || @assert size(data)[end] == length(wts)
+    @assert length(wts) == size(data)[end] > 0
+    _validate_weights(wts)
     @assert 0 ≤ hidden_offset_damping ≤ 1
 
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported
@@ -60,10 +61,11 @@ function advpcd!(
 
     # initial centering from data
     if rbm isa CenteredRBM
-        center_from_data!(rbm, data)
+        center_from_data!(rbm, data; wts)
     end
 
-    wts_mean = isnothing(wts) ? 1 : mean(wts)
+    wts_mean = mean(wts)
+    batchsize = min(batchsize, length(wts))
 
     # impose hard 1st-order constraint on initial weights
     qs_inv = map(pseudo_inv_of_q, qs)
@@ -84,8 +86,8 @@ function advpcd!(
         ∂m = ∂free_energy(rbm, vm)
         ∂ = ∂d - ∂m
 
-        # correct weighted minibatch bias
-        batch_weight = isnothing(wts) ? 1 : mean(wd) / wts_mean
+        # correct weighted minibatch bias, in the gradient eltype
+        batch_weight = convert(float(real(eltype(∂.w))), mean(wd) / wts_mean)
         ∂ *= batch_weight
 
         # regularize
