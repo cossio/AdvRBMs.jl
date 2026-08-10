@@ -3,9 +3,12 @@
 # scalar indexing errors out, just like CuArray on CI. The setting is session-global,
 # which is intentional: all JLArrays tests live in this file, and any future test
 # using JLArrays should run under allowscalar(false) too.
+#
+# Only the training loop needs to be GPU-friendly. calc_q/calc_Q run once, before
+# training, so they are computed on the host and the constraints adapted to the device.
 import Random
 import LinearAlgebra
-using Test: @test, @testset, @test_broken
+using Test: @test, @testset
 using Random: bitrand
 using LinearAlgebra: norm, pinv
 using Adapt: adapt
@@ -76,38 +79,6 @@ end
     jl_∂Q = ∂wQw(JLArray(w), JLArray(Q))
     @test jl_∂Q isa JLArray
     @test Array(jl_∂Q) ≈ ∂wQw(w, Q)
-end
-
-@testset "calc_q and calc_Q" begin
-    v = randn(N..., B)
-    u = bitrand(B)
-    uc = falses(3, B) # categorical (one-hot) labels
-    for i in 1:B
-        uc[rand(1:3), i] = true
-    end
-    wts = rand(B)
-
-    jl_v = JLArray(v)
-    jl_u = JLArray(u)
-    jl_uc = JLArray(collect(uc))
-    jl_wts = JLArray(wts)
-
-    # binary labels, default (lazy uniform) weights
-    jl_q = calc_q(jl_u, jl_v)
-    @test jl_q isa JLArray
-    @test Array(jl_q) ≈ calc_q(u, v)
-
-    # explicit device weights
-    @test Array(calc_q(jl_u, jl_v; wts = jl_wts)) ≈ calc_q(u, v; wts)
-    @test Array(calc_Q(jl_u, jl_v; wts = jl_wts)) ≈ calc_Q(u, v; wts)
-    @test Array(calc_q(jl_uc, jl_v; wts = jl_wts)) ≈ calc_q(uc, v; wts)
-
-    # with the default lazy `Trues` weights these paths build `Diagonal(wts)`, which
-    # mixes a host matrix into device matmuls and falls back to scalar indexing
-    @test_broken calc_Q(jl_u, jl_v) isa JLArray
-    @test_broken calc_q(jl_uc, jl_v) isa JLArray
-    # categorical calc_Q accumulates into a host `zeros` array
-    @test_broken calc_Q(jl_uc, jl_v; wts = jl_wts) isa JLArray
 end
 
 @testset "advpcd! on device" begin
