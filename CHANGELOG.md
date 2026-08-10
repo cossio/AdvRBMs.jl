@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v3.0.0
 
 - BREAKING: Support RestrictedBoltzmannMachines 7.1, which is now required (was 3.8, 4, 5). All RestrictedBoltzmannMachines symbols used by this package are `public` as of that release, so this package no longer depends on upstream internals. Following the upstream change, `wts = nothing` is no longer accepted: the `wts` keyword of `advpcd!`, `calc_q`, `calc_Q`, `calc_qs`, and `calc_Qs` must be an `AbstractVector{<:Real}` and defaults to lazy uniform weights, so the unweighted and weighted cases share a single code path. As upstream, `advpcd!` validates weights once per training run (finite, positive, matching the number of samples, with at least one sample), uses them exactly as given, and for `CenteredRBM` now also weights the initial centering. Unweighted callbacks receive lazy uniform weight slices as `wd` (previously `nothing`).
 - A `batchsize` larger than the number of samples now clamps to the number of samples in both `advpcd!` methods (matching the upstream trainers), instead of silently performing zero iterations.
