@@ -11,7 +11,7 @@ function advpcd!(
         data::AbstractArray;
         batchsize::Int = 1,
         iters::Int = 1, # number of parameter updates
-        wts::AbstractVector{<:Real} = uniform_weights(rbm.visible, data), # data weights
+        wts::AbstractVector{<:Real} = uniform_wts(rbm.visible, data), # data weights
         steps::Int = 1, # fantasy chains MC steps
         optim = Adam(),
         moments = moments_from_samples(rbm.visible, data; wts), # sufficient statistics for visible layer
@@ -45,7 +45,7 @@ function advpcd!(
     )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
     @assert length(wts) == size(data)[end] > 0
-    _validate_weights(wts)
+    validate_wts(wts)
     @assert 0 ≤ hidden_offset_damping ≤ 1
 
     @assert 0 ≤ λQ < Inf # hard 2nd-order constraint not supported

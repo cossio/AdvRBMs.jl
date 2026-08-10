@@ -12,7 +12,7 @@ using RestrictedBoltzmannMachines: CenteredRBM, center_hidden_from_data!, center
 using RestrictedBoltzmannMachines: sample_v_from_v,
     ∂free_energy, ∂regularize!,
     sample_from_inputs, moments_from_samples, infinite_minibatches,
-    zerosum!, rescale_weights!, wmean, uniform_weights, _validate_weights
+    zerosum!, rescale_weights!, wmean, uniform_wts, validate_wts
 
 include("calc_qQ.jl")
 include("proj.jl")
