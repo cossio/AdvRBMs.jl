@@ -76,10 +76,11 @@ RestrictedBoltzmannMachines.jl and supports Julia 1.12 and later.
 - Add CHANGELOG.md entries only for user-facing package changes to source,
   APIs, behavior, or dependencies. Do not add entries for CI, workflows,
   agent plumbing, or other repository tooling.
-- PRs receive automated review comments from the Claude Code review
-  workflow in `.github/workflows/claude-code-review.yml`. Address each
-  actionable finding or explain the disagreement in its thread, reply to
-  every thread, and resolve it once addressed.
+- PR reviews are not automatic, and requesting one is not your call: the
+  repository owner triggers a Claude review when they want one. Never
+  trigger a review yourself, and do not ask for one. When review comments
+  do arrive, address each actionable finding or explain the disagreement
+  in its thread, reply to every thread, and resolve it once addressed.
 - Follow REVIEW.md; flag substantial avoidable complexity only when a
   materially simpler design satisfies the current requirements.
 - Never merge a PR or enable auto-merge unless the repository owner
