@@ -19,3 +19,6 @@ end
 module advpcd_std_tests
     include("advpcd_std.jl")
 end
+module jlarrays_tests
+    include("jlarrays.jl")
+end
