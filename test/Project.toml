@@ -16,7 +16,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 [compat]
 Adapt = "4"
 AdvRBMs = "3"
-Aqua = "0.8"
+Aqua = "0.8.16"
 ExplicitImports = "1.15"
 FillArrays = "1.9"
 JLArrays = "0.3"
