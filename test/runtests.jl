@@ -1,6 +1,9 @@
 module aqua_tests
     include("aqua.jl")
 end
+module test_compat_hygiene_tests
+    include("test_compat_hygiene.jl")
+end
 module explicit_imports_tests
     include("explicit_imports.jl")
 end
